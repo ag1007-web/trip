@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大阪四天之旅</title>
+  <!-- 替換為更穩定快速的 Cloudflare CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
+  <!-- 載入 Babel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
+  <style>
+    body { margin: 0; padding: 0; background-color: #f0ebe0; font-family: 'Helvetica Neue', 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
+    * { box-sizing: border-box; }
+    ::-webkit-scrollbar { width: 0px; background: transparent; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // ── Flight data ───────────────────────────────────────────────────────────────
+    const FLIGHTS = {
+      bookings: [
+        {
+          reservationCode: "YUXUMY",
+          pnr: "SL47648576",
+          label: "訂位一（林）",
+          passengers: [
+            { name: "Mr Mingyang Lin",  eTicket: "3102159573107", baggage: "去程 35kg／回程 45kg" },
+            { name: "Mstr Shikai Lin",  eTicket: "3102159573108", baggage: "去程 20kg／回程 20kg" },
+          ],
+        },
+        {
+          reservationCode: "ACPDHD",
+          pnr: "SL47648519 / SL47648718",
+          label: "訂位二（魏・李）",
+          passengers: [
+            { name: "Mrs Wenyi Wei",   eTicket: "3102159573174", baggage: "回程 20kg（去程無托運）" },
+            { name: "Mrs Meihsia Lee", eTicket: "3102159573175", baggage: "回程 20kg（去程無托運）" },
+          ],
+        },
+      ],
+      outbound: {
+        label: "去程",
+        date: "2026年6月25日（四）",
+        segments: [
+          {
+            no: "SL 396",
+            airline: "Thai Lion Air 泰獅航空",
+            aircraft: "Boeing 737-900",
+            cabin: "經濟艙・無餐食服務",
+            from: { code: "TPE", name: "台灣桃園國際機場", terminal: "第一航廈 T1", time: "08:55" },
+            to:   { code: "KIX", name: "關西國際機場", terminal: "第一航廈 T1", time: "12:30" },
+            duration: "2小時35分",
+            note: "落地後搭南海電鐵特急 → 難波站（約34分鐘），再搭計程車前往飯店",
+          },
+        ],
+      },
+      inbound: {
+        label: "回程",
+        date: "2026年6月28日（日）",
+        segments: [
+          {
+            no: "SL 397",
+            airline: "Thai Lion Air 泰獅航空",
+            aircraft: "Boeing 737-900",
+            cabin: "經濟艙・無餐食服務",
+            from: { code: "KIX", name: "關西國際機場", terminal: "第一航廈 T1", time: "13:30" },
+            to:   { code: "TPE", name: "台灣桃園國際機場", terminal: "第一航廈 T1", time: "15:20" },
+            duration: "2小時50分",
+            note: "建議 10:30 前抵達關西機場（起飛前3小時）；出境前辦理退稅，請預留30–45分鐘",
+          },
+        ],
+      },
+      baggage: [
+        "🧳 林爸（Mr Mingyang Lin）：去程 35kg、回程 45kg",
+        "🧳 林小弟（Mstr Shikai Lin）：去程 20kg、回程 20kg",
+        "🧳 魏太太（Mrs Wenyi Wei）：回程 20kg（去程無托運）",
+        "🧳 李太太（Mrs Meihsia Lee）：回程 20kg（去程無托運）",
+        "👜 手提行李＋個人物品合計不超過 7 公斤（全員）",
+        "💧 液體每件不超過 100ml，裝於透明夾鏈袋（隨身）",
+      ],
+      reminders: [
+        "✅ 去程訂位代號：YUXUMY（林先生・林小弟）",
+        "✅ 回程訂位代號：ACPDHD（魏太太・李太太）",
+        "✅ Thai Lion Air 於起飛前48小時開放線上 Check-in",
+        "✅ 手提行李＋個人物品合計不超過 7 公斤，無免費托運",
+        "✅ 請攜帶與購票相同之身分證明文件（護照）",
+        "✅ 關西機場建議起飛前3小時抵達（10:30前）",
+        "✅ 南海電鐵特急 Rapi:t（難波→關西機場）建議提前購票",
+        "✅ 出發前確認全員護照效期超過6個月",
+      ],
+    };
+
+    // ── Trip data (Integrated with Pocket List) ──────────────────────────────────
+    const DEFAULT_TRIP = {
+      title: "大阪四天之旅 🏯",
+      days: [
+        {
+          id: 1, label: "6/25 四", date: "Day 1｜難波慢開機日", theme: "抵達大阪 × 舒適入住與在地補給", emoji: "🏮",
+          spots: [
+            { time: "12:30", name: "✈️ 抵達關西機場", note: "入境後前往南海電鐵，購票搭乘特急列車", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "大阪府泉佐野市泉州空港北1", done: false, pass: false },
+            { time: "13:30", name: "🚃 南海電鐵特急 → 難波站", note: "約34分鐘直達難波，今日使用ICOCA或買單程票", mapUrl: "https://maps.google.com/?q=南海難波站", address: "大阪市中央区難波5丁目1-60", done: false, pass: false },
+            { time: "14:30", name: "🏨 飯店入住 / 放置行李", note: "搭計程車前往飯店，讓長輩稍作休息", mapUrl: "https://maps.google.com/?q=34.657529,135.508101", address: "〒556-0006 大阪市浪速区日本橋東3丁目6番", done: false, pass: false },
+            { time: "15:30", name: "🛍️ 心齋橋/道頓堀周邊逛街", note: "帶家人輕鬆逛街。沿途可逛 大創DAISO 戎橋店、3COINS+plus 等", mapUrl: "https://maps.google.com/?q=心齋橋", address: "大阪市中央区心斎橋筋", done: false, pass: false },
+            { time: "17:00", name: "🛒 LIFE Shimodera Store 補給", note: "重點任務！買大罐水、茶飲、幼兒零食與當季水果。東西重可搭計程車回飯店。", mapUrl: "https://maps.google.com/?q=34.6585212,135.509623", address: "大阪市浪速区下寺", done: false, pass: false },
+            { time: "18:30", name: "🍽️ 難波周邊晚餐", note: "推薦重亭漢堡排、一芳亭燒賣或大起水產回轉壽司", mapUrl: "https://maps.google.com/?q=難波", address: "難波周邊", done: false, pass: false },
+          ],
+          restaurants: [
+            {
+              meal: "晚餐 首選 ⭐", emoji: "🍣", name: "大起水産回轉壽司 道頓堀店/難波店",
+              genre: "平價迴轉壽司", budget: "¥1,500–3,000", area: "道頓堀/難波",
+              hours: "11:00–22:00",
+              mapUrl: "https://maps.google.com/?q=34.6669102,135.5042094",
+              address: "多間分店可選",
+              recommend: "人氣平價迴轉壽司！海鮮新鮮，價格親民，長輩小孩接受度高，想吃多少拿多少，非常方便。",
+              tips: ["用餐時間人潮多，建議提早或延後用餐"],
+            },
+            {
+              meal: "晚餐 備選", emoji: "🍽️", name: "重亭 (Jutei)",
+              genre: "漢堡排洋食", budget: "¥1,200–2,000", area: "難波",
+              hours: "11:30–15:00, 17:00–20:30 (週二休)",
+              mapUrl: "https://maps.google.com/?q=34.6659,135.5015",
+              address: "大阪市中央区難波3丁目1-30",
+              recommend: "難波超老派洋食店，大阪人「從小吃到大的味道」。招牌肉汁漢堡排切開會爆汁！觀光客不多，非常有在地生活感。",
+              tips: ["人氣極高，建議剛開店就去", "漢堡排必點，蛋包飯也是一絕"],
+            },
+             {
+              meal: "晚餐 備選", emoji: "🥟", name: "一芳亭 本店",
+              genre: "中華食堂", budget: "¥1,000–1,800", area: "難波",
+              hours: "11:30–20:00 (週日、假日休)",
+              mapUrl: "https://maps.google.com/?q=34.6631,135.5005",
+              address: "大阪市浪速区難波中2丁目6-22",
+              recommend: "大阪戰後代表性中華食堂，很多大阪人從小吃到大。招牌「蛋皮燒賣」是大阪名物，外皮是薄蛋皮，內餡鮮甜多汁。",
+              tips: ["口味溫和，長輩小孩接受度高"],
+            },
+            {
+              meal: "購物 必逛", emoji: "🛍️", name: "大國藥妝 NEW心斎橋店",
+              genre: "藥妝店", budget: "", area: "心齋橋",
+              hours: "09:00-23:00",
+              mapUrl: "https://maps.google.com/?q=34.6765702,135.5021045",
+              address: "大阪市中央区心斎橋筋",
+              recommend: "您的口袋清單！據說便宜東西多，很推薦。可趁逛街時順便採買常備藥品。",
+              tips: ["記得帶護照辦理退稅"],
+            }
+          ],
+        },
+        {
+          id: 2, label: "6/26 五", date: "Day 2｜周遊卡 Day 1 🎫", theme: "港灣觀覽車與天王寺動物園", emoji: "🎡",
+          spots: [
+            { time: "出發前", name: "💡 周遊卡啟動！", note: "地鐵全線免費搭乘，記得帶周遊卡出門！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:00", name: "🚇 飯店出發 → 大阪港（天保山）", note: "搭乘地鐵前往大阪港站，開始一天的港灣行程", mapUrl: "https://maps.google.com/?q=大阪港站", address: "地鐵大阪港站", done: false, pass: false },
+            { time: "09:30", name: "🎡 天保山大摩天輪", note: "【必去/周遊卡免費】搭乘巨大摩天輪俯瞰大阪灣，小孩會對寬闊視野感到興奮 (4歲需現場購票約 ¥500)", mapUrl: "https://maps.google.com/?q=天保山大摩天輪", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
+            { time: "10:30", name: "⛵ 帆船型觀光船 聖瑪麗亞號", note: "【順遊/周遊卡免費】搭乘仿古帆船航行大阪港45分鐘，1樓有互動船艙可探險 (4歲免費)", mapUrl: "https://maps.google.com/?q=帆船型観光船サンタマリア", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
+            { time: "11:30", name: "🍱 天保山市場街 浪速美食橫丁", note: "商場內的復古美食街，有許多免排隊且適合親子的餐廳", mapUrl: "https://maps.google.com/?q=天保山マーケットプレース", address: "大阪市港区海岸通1丁目1-10 2F", done: false, pass: false },
+            { time: "13:00", name: "🚇 大阪港 → 動物園前站", note: "搭乘中央線至本町，轉御堂筋線至動物園前站", mapUrl: "https://maps.google.com/?q=動物園前站", address: "地鐵動物園前站", done: false, pass: false },
+            { time: "13:30", name: "🐧 天王寺動物園放電", note: "【必去/周遊卡免費】超過百年歷史，看獅子與企鵝！園區大小適中，逛起來不會讓小孩過度疲累 (4歲以下免費)", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: true },
+            { time: "16:30", name: "🚇 動物園前 → 道頓堀", note: "玩累了搭地鐵回道頓堀，建議先到乘船處兌換晚間班次船票", mapUrl: "https://maps.google.com/?q=道頓堀", address: "大阪市中央区道頓堀", done: false, pass: false },
+            { time: "17:00", name: "🚤 道頓堀水上觀光船", note: "【必去/周遊卡免費】晚餐前後搭觀光船穿梭霓虹燈海 (4歲小孩由大人抱坐免費)", mapUrl: "https://maps.google.com/?q=太左衛門橋船着場", address: "太左衛門橋船著場 (驚安殿堂前)", done: false, pass: true },
+            { time: "18:00", name: "🥩 道頓堀晚餐", note: "享受燒肉吃到飽或大阪燒，結束海陸充實的一天", mapUrl: "https://maps.google.com/?q=道頓堀", address: "道頓堀周邊", done: false, pass: false },
+          ],
+          restaurants: [
+             {
+              meal: "午餐 推薦", emoji: "🧇", name: "天保山 浪速美食橫丁",
+              genre: "親子午餐/輕食", budget: "¥800–1,500", area: "天保山市場街",
+              hours: "11:00–20:00",
+              mapUrl: "https://maps.google.com/?q=34.6540,135.4320",
+              address: "大阪市港区海岸通1丁目1-10 2F",
+              recommend: "下船後直接走進商場的復古美食街，有自由軒咖哩、北極星蛋包飯等名店，選擇多且適合小孩，室內冷氣充足是最舒服的休息點。",
+              tips: ["有兒童椅與育嬰室", "找免排隊的店吃即可，把體力留給下午動物園"],
+            },
+            {
+              meal: "晚餐 首選 ⭐", emoji: "🥩", name: "但馬屋 デラックス DX 心斎橋店",
+              genre: "燒肉", budget: "¥4,000–6,000", area: "心齋橋",
+              hours: "11:00–23:00",
+              mapUrl: "https://maps.google.com/?q=34.6692819,135.5015241",
+              address: "大阪市中央区宗右衛門町",
+              recommend: "您的口袋清單！環境舒適的燒肉店，提供高品質的黑毛和牛。適合一家人好好吃頓大餐慰勞一天的辛勞。",
+              tips: ["建議提早預約", "單點制，可依個人食量控制預算"],
+            },
+            {
+              meal: "晚餐 備選", emoji: "🥞", name: "なにわのお好み焼じろ",
+              genre: "大阪燒", budget: "¥1,500–2,500", area: "梅田",
+              hours: "11:00–23:00",
+              mapUrl: "https://maps.google.com/?q=34.744522,135.498272",
+              address: "此店位於新大阪附近，若非特意前往較遠，可考慮道頓堀的美津の",
+              recommend: "您的口袋清單中的大阪燒！",
+              tips: ["距離主要活動區域較遠，需評估長輩體力"],
+            },
+             {
+              meal: "宵夜", emoji: "🍻", name: "今日しかない 居酒屋",
+              genre: "居酒屋", budget: "¥2,000-4,000", area: "新大阪",
+              hours: "17:00-00:00",
+              mapUrl: "https://maps.google.com/?q=34.7425175,135.4988011",
+              address: "新大阪",
+              recommend: "您的口袋清單！但距離難波較遠，若不嫌遠可前往體驗。",
+              tips: ["距離難波稍遠"],
+            }
+          ],
+        },
+        {
+          id: 3, label: "6/27 六", date: "Day 3｜周遊卡 Day 2 🎫", theme: "巨型室內攀爬城堡與大阪城小火車", emoji: "🏰",
+          spots: [
+            { time: "出發前", name: "💡 周遊卡 Day 2 繼續省！", note: "今日堅守大阪市區，不去奈良，以免浪費周遊卡價值！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "08:30", name: "🏨 飯店吃完早餐出發", note: "在飯店悠閒吃完早餐後，準備前往兒童樂園", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:30", name: "🚇 飯店 → 扇町站", note: "搭乘堺筋線直達扇町站（Kids Plaza Osaka）", mapUrl: "https://maps.google.com/?q=扇町站", address: "地鐵扇町站", done: false, pass: false },
+            { time: "10:00", name: "🏰 大阪兒童樂園 (Kids Plaza)", note: "【必去/周遊卡出示折價】全日本頂級兒童博物館！趁早上去人較少，室內冷氣舒適，玩到中午剛好 (4歲自費約¥500)", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
+            { time: "12:30", name: "🍱 扇町 / 天神橋筋 午餐", note: "【順遊】日本第一長「天神橋筋商店街」，邊吃邊逛，順便買中村屋可樂餅", mapUrl: "https://maps.google.com/?q=天神橋筋商店街", address: "大阪市北区天神橋", done: false, pass: false },
+            { time: "13:30", name: "🚇 扇町 → 大阪城（谷町四丁目站）", note: "搭乘堺筋線至堺筋本町，轉中央線至谷町四丁目", mapUrl: "https://maps.google.com/?q=谷町四丁目站", address: "地鐵谷町四丁目站", done: false, pass: false },
+            { time: "14:00", name: "🏯 大阪城天守閣", note: "【必去/周遊卡免費】在宏偉的護城河旁散步、拍照非常漂亮 (城堡內樓梯多不適合推車，4歲免費)", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: true },
+            { time: "15:00", name: "🌳 大阪城西之丸庭園", note: "【順遊/周遊卡免費】天守閣旁的大片平坦草地，讓小孩奔跑放電、拍攝城堡全景的最佳無障礙景點", mapUrl: "https://maps.google.com/?q=大阪城西の丸庭園", address: "大阪城公園內", done: false, pass: true },
+            { time: "15:30", name: "🚂 大阪城公園路面小火車", note: "從天守閣搭乘小火車回到地鐵站 (單程約¥400自費)，4歲小孩會坐得非常開心", mapUrl: "https://maps.google.com/?q=大阪城公園", address: "大阪城公園內乘車處", done: false, pass: false },
+            { time: "16:30", name: "🚇 大阪城 → 惠美須町 (新世界)", note: "搭乘中央線至堺筋本町，轉堺筋線直達惠美須町站", mapUrl: "https://maps.google.com/?q=惠美須町站", address: "地鐵惠美須町站", done: false, pass: false },
+            { time: "17:00", name: "🗼 新世界老街與通天閣", note: "【必去/周遊卡免費】造訪充滿浮誇霓虹招牌的新世界老街，並登上通天閣俯瞰夜景", mapUrl: "https://maps.google.com/?q=通天閣", address: "大阪市浪速区恵美須東1丁目18-6", done: false, pass: true },
+            { time: "18:00", name: "🍢 新世界晚餐", note: "在串炸發源地品嚐大阪名物，多有榻榻米座位適合家庭", mapUrl: "https://maps.google.com/?q=新世界本通商店街", address: "大阪市浪速区恵美須東", done: false, pass: false },
+          ],
+          restaurants: [
+             {
+              meal: "點心 必吃", emoji: "🥔", name: "中村屋コロッケ",
+              genre: "可樂餅", budget: "¥100", area: "天神橋筋",
+              hours: "09:00-18:30 (週日休)",
+              mapUrl: "https://maps.google.com/?q=34.6971952,135.5116341",
+              address: "大阪市北区天神橋2丁目3-21",
+              recommend: "您的口袋清單！天神橋筋商店街超人氣排隊美食，剛炸好的可樂餅酥脆熱呼呼，非常適合當作小孩放電完的點心。",
+              tips: ["通常需要排隊", "拿到手趁熱吃最棒"],
+            },
+            {
+              meal: "午餐 CP值首選", emoji: "🦢", name: "宇奈とと南森町店",
+              genre: "平價鰻魚飯", budget: "¥700–1,100", area: "天神橋筋",
+              hours: "11:00–21:00（週二公休）",
+              mapUrl: "https://maps.google.com/?q=34.6967821,135.511603",
+              address: "大阪市北区天神橋",
+              recommend: "您的口袋清單！超平價鰻魚飯！¥700多就能吃到香噴噴的鰻魚丼，醬汁濃郁、鰻魚軟嫩，CP值無敵高。長輩和小孩都很容易接受的口味。",
+              tips: ["平日午間11:30–13:00有排隊，建議13點後去"],
+            },
+            {
+              meal: "晚餐 首選 ⭐", emoji: "🍛", name: "串炸八重勝 新世界本通店",
+              genre: "串炸", budget: "¥1,000–1,800", area: "新世界",
+              hours: "10:30–21:00（週四公休）",
+              mapUrl: "https://maps.google.com/?q=34.6516,135.5065",
+              address: "大阪市浪速区恵美須東3丁目4-13",
+              recommend: "新世界最強在地串炸店！麵衣極薄酥香，油完全不膩。必點：鮮蝦、蓮藕、炸雞串、蘆筍。菜單有中文，點餐容易。",
+              tips: ["僅收現金，記得帶日圓"],
+            }
+          ],
+        },
+        {
+          id: 4, label: "6/28 日", date: "Day 4｜賦歸", theme: "離開前的大阪日常 × 悠閒早晨", emoji: "🛫",
+          spots: [
+            { time: "早上", name: "😴 睡到自然醒", note: "周遊卡已於凌晨2:59失效，功成身退。今日輕鬆過！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:00", name: "🐟 黑門市場 (或改飯店周邊吃早餐)", note: "若時間允許，可至黑門市場體驗大阪廚房，或在飯店周圍找間咖啡廳吃早餐", mapUrl: "https://maps.google.com/?q=黑門市場", address: "大阪市中央区日本橋", done: false, pass: false },
+            { time: "10:00", name: "🚃 難波站 → 關西機場（南海電鐵特急）", note: "約34分鐘直達關西機場第一航廈，建議購買特急券確保座位", mapUrl: "https://maps.google.com/?q=南海難波站", address: "南海難波車站", done: false, pass: false },
+            { time: "11:00", name: "🛍️ 臨空城 Outlet (可選行程)", note: "【備案/購物】若提早到機場區域，可考慮將行李寄放後前往臨空城最後採買 (注意搭機時間)", mapUrl: "https://maps.google.com/?q=34.4107338,135.2996108", address: "臨空城 Rinku Premium Outlets", done: false, pass: false },
+            { time: "13:30", name: "✈️ 搭機回台", note: "⚠️ 機場最後30分鐘最危險！買伴手禮容易爆預算。辦理免稅退稅記得預留排隊時間。", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "關西國際機場 (KIX) 第一航廈", done: false, pass: false },
+          ],
+          restaurants: [
+             {
+              meal: "早餐/早午餐", emoji: "🐟", name: "黑門市場",
+              genre: "傳統市場", budget: "¥1,000–3,000", area: "日本橋",
+              hours: "約09:00-18:00",
+              mapUrl: "https://maps.google.com/?q=34.6652771,135.5065545",
+              address: "大阪市中央区日本橋",
+              recommend: "您的口袋清單！被稱為大阪的廚房，可以吃到許多新鮮海產、和牛串、哈密瓜等，適合邊走邊吃體驗市場氛圍。",
+              tips: ["價格偏觀光客價", "留意搭機時間，不要逛太晚"],
+            },
+            {
+              meal: "早餐 備選", emoji: "🥐", name: "KOMEDA'S Coffee 客美多咖啡 日本橋店",
+              genre: "日式早餐", budget: "¥700–1,000", area: "日本橋",
+              hours: "07:00–20:00",
+              mapUrl: "https://maps.google.com/?q=34.6574,135.5060",
+              address: "大阪市浪速区日本橋",
+              recommend: "日本連鎖早餐咖啡廳名店。點任一飲料就附贈厚片吐司加水煮蛋的「Morning Set」，是最道地的日式早餐體驗。氣氛悠閒不趕人。",
+              tips: ["早上11點前有Morning Set優惠"],
+            },
+          ],
+        },
+      ],
+      notes: "🆘 【家庭團生存急救指南】\n1. 小孩崩潰/太累：直接進入最近的百貨公司（如難波 Parks、大丸），避開街頭，室內冷氣與乾淨廁所是救星。\n2. 長輩腳痛：果斷放棄後續景點，搜尋半徑 500m 內的「喫茶店」坐下休息。\n3. 行程落後：不要有壓力，直接刪除下午場景點，提早進入晚餐環節。\n4. 交通決策：只要步行超過 10 分鐘，請毫不猶豫地搭乘計程車！\n\n☔ 【雨天備案】\n若遇大雨，戶外行程(如大阪城、動物園)不便，可替換為：\n- 備案一：【大阪生活今昔館】(周遊卡免費) - 室內體驗江戶時代大阪風情，地鐵天神橋筋六丁目站直達。\n- 備案二：加長【Kids Plaza 大阪兒童樂園】停留時間，旁邊就是日本最長天神橋筋商店街，有屋頂完全不怕雨。\n- 備案三：【海遊館】(需另外購票) - 天保山旁，世界最大級室內水族館。\n- 備案四(回程)：【臨空城 Outlet】 - 若最後一天下雨沒地方去，可提早前往機場附近的 Outlet 室內逛街。",
+      lastUpdated: new Date().toISOString(),
+    };
+
+    // ── Helpers ──────────────────────────────────────────────────────────────────
+    function formatTime(iso) {
+      if (!iso) return "";
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString("zh-TW", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+      } catch { return ""; }
+    }
+
+    const DAY_COLORS = ["#e07b3a", "#4aab7a", "#3a8fbf", "#9b6bbf"];
+
+    const C = {
+      bg: "#f0ebe0", bgCard: "#faf7f2", bgCardDone: "#ede9e1",
+      green: "#4aab7a", greenDark: "#357a57", greenLight: "#e8f5ee", greenBand: "#4aab7a",
+      border: "#d8cfc0", borderCard: "#e2dbd0",
+      text: "#3a3028", textMid: "#7a6e62", textLight: "#a89e93",
+      accent: "#e07b3a",
+      wood: "repeating-linear-gradient(90deg,rgba(180,155,110,0.07) 0px,rgba(180,155,110,0.07) 1px,transparent 1px,transparent 40px)",
+    };
+
+    function getWeatherIcon(code) {
+      if (code === 0)  return { icon: "☀️", label: "晴天" };
+      if (code <= 2)   return { icon: "🌤️", label: "晴時多雲" };
+      if (code <= 3)   return { icon: "☁️",  label: "陰天" };
+      if (code <= 49)  return { icon: "🌫️", label: "霧" };
+      if (code <= 59)  return { icon: "🌦️", label: "毛毛雨" };
+      if (code <= 69)  return { icon: "🌧️", label: "雨天" };
+      if (code <= 79)  return { icon: "🌨️", label: "雪" };
+      if (code <= 84)  return { icon: "🌦️", label: "陣雨" };
+      if (code <= 99)  return { icon: "⛈️",  label: "雷雨" };
+      return { icon: "🌡️", label: "未知" };
+    }
+
+    function fmtDay(dateStr) {
+      if (!dateStr) return "";
+      const d = new Date(dateStr);
+      const wd = ["日","一","二","三","四","五","六"];
+      return `${d.getMonth()+1}/${d.getDate()}（${wd[d.getDay()]}）`;
+    }
+
+    // ── Per-day restaurant card ───────────────────────────────────────────────────
+    function DayRestaurantCard({ r, color }) {
+      const [open, setOpen] = useState(false);
+      if (!r) return null;
+      return (
+        <div style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, overflow: "hidden", marginBottom: 12, boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+          <div onClick={() => setOpen(o => !o)} style={{ padding: "12px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+            <span style={{ fontSize: 26, flexShrink: 0, lineHeight: 1 }}>{r.emoji}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                <span style={{ fontSize: 10, background: `${color}18`, color: color, borderRadius: 8, padding: "2px 8px", fontWeight: 700 }}>{r.meal}</span>
+                <span style={{ fontSize: 10, background: "#fff7f0", color: C.accent, borderRadius: 8, padding: "2px 8px", fontWeight: 600 }}>{r.budget}</span>
+              </div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.text, marginTop: 3, lineHeight: 1.3 }}>{r.name}</div>
+              <div style={{ fontSize: 11, color: C.textLight, marginTop: 2 }}>{r.genre}・{r.area}</div>
+              {r.hours && <div style={{ fontSize: 11, color: C.green, fontWeight: 600, marginTop: 3 }}>🕐 {r.hours}</div>}
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+              {r.mapUrl && (
+                <a href={r.mapUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                  style={{ fontSize: 11, color: C.green, fontWeight: 700, textDecoration: "none", border: `1.5px solid ${C.green}`, borderRadius: 10, padding: "3px 10px", background: C.greenLight, whiteSpace: "nowrap" }}>
+                  地圖 ↗
+                </a>
+              )}
+              <span style={{ fontSize: 11, color: C.textLight }}>{open ? "▲ 收起" : "▼ 展開"}</span>
+            </div>
+          </div>
+
+          {open && (
+            <div style={{ padding: "0 16px 14px", borderTop: `1px solid ${C.border}` }}>
+              {r.address && (
+                <div style={{ fontSize: 11, color: C.textMid, marginTop: 12, background: "#f5f5f5", padding: "4px 8px", borderRadius: 6, display: "inline-block", border: `1px solid ${C.border}` }}>
+                  📍 {r.address}
+                </div>
+              )}
+              <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.75, marginTop: 8 }}>{r.recommend}</div>
+              {r.tips && r.tips.length > 0 && (
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: color, letterSpacing: 2, marginBottom: 6 }}>💡 小貼士</div>
+                  {r.tips.map((tip, i) => (
+                    <div key={i} style={{ fontSize: 12, color: C.textMid, marginBottom: 5, paddingLeft: 10, borderLeft: `2.5px solid ${color}55`, lineHeight: 1.6 }}>{tip}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ── Main app (Read-only mode) ────────────────────────────────────────────────
+    function OsakaTrip() {
+      const [trip, setTrip]             = useState(null);
+      const [mainTab, setMainTab]       = useState("itinerary");
+      const [activeDay, setActiveDay]   = useState(0);
+      const [loaded, setLoaded]         = useState(false);
+      const [weather, setWeather]       = useState(null);
+
+      const fetchWeather = () => {
+          const today = new Date();
+          setWeather([0,1,2].map(i => {
+            const d = new Date(today); d.setDate(d.getDate() + i);
+            return { 
+                date: d.toISOString().slice(0,10), 
+                icon: ["🌦️","☀️","🌤️"][i], 
+                label: ["陣雨","晴天","晴時多雲"][i], 
+                max: [26,29,28][i], 
+                min: [21,22,21][i], 
+                rain: [60,15,30][i] 
+            };
+          }));
+      };
+
+      const loadTrip = () => {
+        try {
+          const saved = localStorage.getItem("osaka-trip-v10-readonly");
+          setTrip(saved ? JSON.parse(saved) : DEFAULT_TRIP);
+        } catch { setTrip(DEFAULT_TRIP); }
+        setLoaded(true);
+      };
+
+      const saveTrip = (data) => {
+        const updated = { ...data, lastUpdated: new Date().toISOString() };
+        try { 
+            localStorage.setItem("osaka-trip-v10-readonly", JSON.stringify(updated)); 
+            setTrip(updated); 
+        } catch (e) { console.error(e); }
+      };
+
+      useEffect(() => {
+        loadTrip(); fetchWeather();
+      }, []);
+
+      const toggleDone = async (di, si) => {
+        if (!trip) return;
+        const next = JSON.parse(JSON.stringify(trip));
+        next.days[di].spots[si].done = !next.days[di].spots[si].done;
+        saveTrip(next);
+      };
+
+      if (!loaded) return (
+        <div style={{ minHeight: "100vh", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ color: C.green, fontSize: 18, letterSpacing: 3 }}>載入中…</div>
+        </div>
+      );
+
+      const todayData    = trip && trip.days ? trip.days[activeDay] : null;
+      const activeColor  = DAY_COLORS[activeDay] || C.green;
+
+      return (
+        <div style={{ minHeight: "100vh", background: C.bg, backgroundImage: C.wood, color: C.text, paddingBottom: 60 }}>
+
+          <div style={{ background: C.greenBand, height: 8 }} />
+
+          <div style={{ background: "rgba(250,247,242,0.96)", borderBottom: `1px solid ${C.border}`, backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 10 }}>
+            <div style={{ maxWidth: 680, margin: "0 auto", padding: "18px 16px 0" }}>
+
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: 5, color: C.green, textTransform: "uppercase", fontWeight: 600, marginBottom: 3 }}>旅遊行程手冊</div>
+                  <h1 style={{ margin: 0, fontSize: "clamp(18px,4.5vw,25px)", fontWeight: 700, color: C.text }}>{trip && trip.title}</h1>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 5, flexShrink: 0 }}>
+                  <div style={{ fontSize: 11, color: C.textMid, background: "#fff", padding: "4px 10px", borderRadius: 20, border: `1px solid ${C.border}` }}>✨ 唯讀模式</div>
+                  {trip && trip.lastUpdated && <div style={{ fontSize: 10, color: C.textLight }}>進度已儲存</div>}
+                </div>
+              </div>
+
+              <div style={{ marginTop: 12, background: "white", border: `1.5px solid ${C.border}`, borderRadius: 12, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                  <span style={{ width: 34, height: 34, borderRadius: "50%", background: C.greenLight, border: `1.5px solid ${C.green}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, flexShrink: 0 }}>🏨</span>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>住宿地點</div>
+                    <div style={{ fontSize: 11, color: C.textMid, marginTop: 1, lineHeight: 1.4 }}>〒556-0006 大阪市浪速区日本橋東3丁目6番</div>
+                    <div style={{ fontSize: 10, color: C.textLight, marginTop: 1 }}>搭計程車時可直接出示此日文地址給司機</div>
+                  </div>
+                </div>
+                <a href="https://www.google.com/maps?q=34.657529193809,135.508101335582" target="_blank" rel="noopener noreferrer"
+                  style={{ flexShrink: 0, background: C.greenLight, border: `1.5px solid ${C.green}`, color: C.greenDark, borderRadius: 16, padding: "5px 12px", fontSize: 11, fontWeight: 700, textDecoration: "none", whiteSpace: "nowrap" }}>
+                  地圖 ↗
+                </a>
+              </div>
+
+              <div style={{ marginTop: 10, marginBottom: 0 }}>
+                {weather ? (
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
+                    {weather.map((w, i) => (
+                        <div key={i} style={{ background: "white", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "8px 6px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                          <div style={{ fontSize: 9.5, color: C.textLight, marginBottom: 3 }}>{fmtDay(w.date)}</div>
+                          <div style={{ fontSize: 22, lineHeight: 1.15 }}>{w.icon}</div>
+                          <div style={{ fontSize: 9, color: C.textMid, marginTop: 2 }}>{w.label}</div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginTop: 3 }}>
+                            {w.max}° <span style={{ fontSize: 11, color: C.textLight, fontWeight: 400 }}>{w.min}°</span>
+                          </div>
+                          <div style={{ fontSize: 9.5, marginTop: 2, color: w.rain >= 50 ? C.accent : C.textLight }}>💧 {w.rain}%</div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", padding: "8px 0" }}>天氣資料載入中…</div>
+                )}
+              </div>
+
+              <div style={{ display: "flex", marginTop: 12 }}>
+                {[{ id: "itinerary", label: "📅 每日行程" }, { id: "restaurants", label: "🍽 餐廳推薦" }, { id: "flights", label: "✈️ 班機" }].map(t => (
+                  <button key={t.id} onClick={() => setMainTab(t.id)} style={{
+                    flex: 1, padding: "10px 4px", border: "none", cursor: "pointer", fontSize: 12,
+                    fontWeight: mainTab === t.id ? 700 : 400,
+                    color: mainTab === t.id ? C.green : C.textMid,
+                    background: "transparent",
+                    borderBottom: mainTab === t.id ? `3px solid ${C.green}` : `3px solid ${C.border}`,
+                    transition: "all 0.15s",
+                  }}>{t.label}</button>
+                ))}
+              </div>
+
+              {mainTab === "itinerary" && trip && trip.days && (
+                <div style={{ display: "flex", gap: 6, padding: "12px 0 12px", overflowX: "auto" }}>
+                  {trip.days.map((day, i) => {
+                    const dc = DAY_COLORS[i];
+                    const active = activeDay === i;
+                    return (
+                      <button key={day.id} onClick={() => setActiveDay(i)} style={{
+                        background: active ? dc : "white", border: `1.5px solid ${active ? dc : C.border}`,
+                        color: active ? "#fff" : C.textMid, padding: "6px 14px", borderRadius: 20,
+                        cursor: "pointer", fontSize: 12, fontWeight: active ? 700 : 400, whiteSpace: "nowrap",
+                        transition: "all 0.18s", boxShadow: active ? `0 2px 8px ${dc}44` : "none",
+                      }}>{day.emoji} {day.label}</button>
+                    );
+                  })}
+                </div>
+              )}
+              {mainTab === "restaurants" && <div style={{ height: 12 }} />}
+            </div>
+          </div>
+
+          <div style={{ maxWidth: 680, margin: "0 auto", padding: "18px 16px 0" }}>
+
+            {mainTab === "itinerary" && todayData && (
+              <>
+                <div style={{ background: `linear-gradient(135deg,${activeColor}18,${activeColor}08)`, border: `1.5px solid ${activeColor}44`, borderRadius: 14, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: "50%", background: `${activeColor}22`, border: `2px solid ${activeColor}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0 }}>{todayData.emoji}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 10, letterSpacing: 4, color: activeColor, textTransform: "uppercase", fontWeight: 700 }}>{todayData.date}</div>
+                    <div style={{ fontSize: 16, fontWeight: 700, marginTop: 2 }}>{todayData.theme}</div>
+                  </div>
+                  {todayData.spots && todayData.spots.length > 0 && (
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: activeColor }}>{todayData.spots.filter(s=>s.done).length}<span style={{ fontSize: 12, color: C.textLight }}>/{todayData.spots.length}</span></div>
+                      <div style={{ fontSize: 9, color: C.textLight, letterSpacing: 1 }}>已完成</div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ position: "relative" }}>
+                  <div style={{ position: "absolute", left: 40, top: 8, bottom: 8, width: 2, background: `linear-gradient(to bottom,${activeColor}88,${activeColor}22)`, borderRadius: 2 }} />
+                  {todayData.spots && todayData.spots.map((spot, si) => (
+                    <div key={si} style={{ display: "flex", marginBottom: 11, alignItems: "flex-start" }}>
+                      <div style={{ width: 32, textAlign: "right", flexShrink: 0, paddingTop: 10 }}>
+                        <span style={{ fontSize: 9.5, color: C.textLight }}>{spot.time}</span>
+                      </div>
+                      <div style={{ width: 18, flexShrink: 0, display: "flex", justifyContent: "center", paddingTop: 10 }}>
+                        <div onClick={() => toggleDone(activeDay, si)} style={{ width: 14, height: 14, borderRadius: "50%", background: spot.done ? activeColor : "white", border: `2px solid ${spot.done ? activeColor : C.border}`, cursor: "pointer", transition: "all 0.2s", zIndex: 1, boxShadow: spot.done ? `0 0 0 3px ${activeColor}22` : "none" }} />
+                      </div>
+                      <div style={{ flex: 1, marginLeft: 8, background: spot.done ? C.bgCardDone : C.bgCard, border: `1px solid ${spot.done ? C.border : C.borderCard}`, borderLeft: `3px solid ${spot.done ? C.border : activeColor}`, borderRadius: 10, padding: "10px 14px", opacity: spot.done ? 0.6 : 1, transition: "all 0.25s", boxShadow: spot.done ? "none" : "0 1px 4px rgba(0,0,0,0.05)" }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600, textDecoration: spot.done ? "line-through" : "none", color: spot.done ? C.textLight : C.text, lineHeight: 1.4, flex: 1 }}>{spot.name}</div>
+                          {spot.pass && (
+                            <span style={{ background: C.greenLight, border: `1px solid ${C.green}44`, color: C.greenDark, fontSize: 9, padding: "2px 6px", borderRadius: 6, fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>
+                              周遊卡免費
+                            </span>
+                          )}
+                        </div>
+                        {spot.note && <div style={{ fontSize: 11.5, color: C.textMid, marginTop: 4, lineHeight: 1.5 }}>{spot.note}</div>}
+                        
+                        {(spot.mapUrl || spot.address) && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+                            {spot.mapUrl && (
+                              <a href={spot.mapUrl} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()}
+                                style={{ fontSize: 10, background: C.greenLight, color: C.greenDark, textDecoration: "none", padding: "3px 8px", borderRadius: 10, fontWeight: 600, border: `1px solid ${C.green}44`, display: "flex", alignItems: "center", gap: 3 }}>
+                                📍 地圖
+                              </a>
+                            )}
+                            {spot.address && (
+                              <span style={{ fontSize: 10, color: C.textMid, background: "#f5f5f5", padding: "3px 8px", borderRadius: 10, border: `1px solid ${C.border}`, lineHeight: 1.2 }}>
+                                {spot.address}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {!spot.done && <div style={{ fontSize: 9.5, color: C.textLight, marginTop: 6 }}>點擊圓點標記完成</div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {todayData.spots && todayData.spots.length > 0 && (
+                  <div style={{ marginTop: 16, padding: "12px 16px", background: C.bgCard, borderRadius: 12, border: `1px solid ${C.border}` }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <span style={{ fontSize: 11, letterSpacing: 2, color: C.textMid, fontWeight: 600 }}>今日進度</span>
+                      <span style={{ fontSize: 11, color: C.textLight }}>{Math.round((todayData.spots.filter(s=>s.done).length / todayData.spots.length)*100)}%</span>
+                    </div>
+                    <div style={{ height: 6, background: C.bgCardDone, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", borderRadius: 3, width: `${(todayData.spots.filter(s=>s.done).length/todayData.spots.length)*100}%`, background: `linear-gradient(90deg,${activeColor},${activeColor}bb)`, transition: "width 0.5s ease" }} />
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ marginTop: 18, padding: "14px 16px", background: C.greenLight, borderRadius: 12, border: `1px solid ${C.green}33` }}>
+                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 7 }}>小提醒 & ☔ 雨天備案</div>
+                  <div style={{ fontSize: 13, color: C.greenDark, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{trip && trip.notes}</div>
+                </div>
+              </>
+            )}
+
+            {/* RESTAURANTS */}
+            {mainTab === "restaurants" && trip && trip.days && (
+              <div>
+                <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
+                  {trip.days.map((day, i) => {
+                    const dc = DAY_COLORS[i];
+                    const active = activeDay === i;
+                    return (
+                      <button key={day.id} onClick={() => setActiveDay(i)} style={{
+                        background: active ? dc : "white", border: `1.5px solid ${active ? dc : C.border}`,
+                        color: active ? "#fff" : C.textMid, padding: "6px 14px", borderRadius: 20,
+                        cursor: "pointer", fontSize: 12, fontWeight: active ? 700 : 400, whiteSpace: "nowrap",
+                        transition: "all 0.18s", boxShadow: active ? `0 2px 8px ${dc}44` : "none",
+                      }}>{day.emoji} {day.label}</button>
+                    );
+                  })}
+                </div>
+
+                {trip.days[activeDay] && (
+                  <div style={{ marginBottom: 14, paddingLeft: 2 }}>
+                    <span style={{ fontSize: 11, color: activeColor, fontWeight: 700, letterSpacing: 1 }}>
+                      {trip.days[activeDay].date} — {trip.days[activeDay].theme}
+                    </span>
+                    <span style={{ fontSize: 11, color: C.textLight, marginLeft: 8 }}>
+                      共 {(trip.days[activeDay].restaurants || []).length} 間推薦
+                    </span>
+                  </div>
+                )}
+
+                {trip.days[activeDay] && (!trip.days[activeDay].restaurants || trip.days[activeDay].restaurants.length === 0) ? (
+                  <div style={{ textAlign: "center", color: C.textLight, fontSize: 13, padding: "40px 0" }}>
+                    這天尚未設定餐廳推薦
+                  </div>
+                ) : (
+                  trip.days[activeDay] && trip.days[activeDay].restaurants && trip.days[activeDay].restaurants.map((r, i) => (
+                    <DayRestaurantCard key={i} r={r} color={activeColor} />
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* FLIGHTS */}
+            {mainTab === "flights" && (
+              <div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+                  {FLIGHTS.bookings.map((b, bi) => (
+                    <div key={bi} style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 12, padding: "12px 14px", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                      <div style={{ fontSize: 9, letterSpacing: 2, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>{b.label}</div>
+                      <div style={{ fontSize: 18, fontWeight: 800, color: C.text, letterSpacing: 2, marginBottom: 2 }}>{b.reservationCode}</div>
+                      {b.pnr && <div style={{ fontSize: 10, color: C.textMid, marginBottom: 8 }}>PNR <span style={{ fontWeight: 700, color: C.accent }}>{b.pnr}</span></div>}
+                      {!b.pnr && <div style={{ marginBottom: 8 }} />}
+                      {b.passengers && b.passengers.map((p, pi) => (
+                        <div key={pi} style={{ marginBottom: 7 }}>
+                          <div style={{ fontSize: 11.5, fontWeight: 600, color: C.text }}>{p.name}</div>
+                          <div style={{ fontSize: 9.5, color: C.textLight, fontFamily: "monospace", marginTop: 1 }}>{p.eTicket}</div>
+                          {p.baggage && <div style={{ fontSize: 10, color: C.green, fontWeight: 600, marginTop: 2 }}>🧳 {p.baggage}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+
+                {[FLIGHTS.outbound, FLIGHTS.inbound].map((leg, li) => (
+                  <div key={li} style={{ marginBottom: 20 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: "50%", background: li === 0 ? "#fff7f0" : C.greenLight, border: `2px solid ${li === 0 ? C.accent : C.green}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>
+                        {li === 0 ? "🛫" : "🛬"}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: C.text }}>{leg.label}</div>
+                        <div style={{ fontSize: 11, color: C.textLight }}>{leg.date}</div>
+                      </div>
+                    </div>
+
+                    {leg.segments.map((seg, si) => (
+                      <div key={si} style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, overflow: "hidden", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+                        <div style={{ background: li === 0 ? "#fff7f0" : C.greenLight, padding: "9px 16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                            <span style={{ fontSize: 15, fontWeight: 800, color: li === 0 ? C.accent : C.greenDark, letterSpacing: 1 }}>{seg.no}</span>
+                            <span style={{ fontSize: 11, color: li === 0 ? "#c0623a" : C.greenDark }}>{seg.airline}</span>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: 10, color: li === 0 ? "#c0623a" : C.greenDark }}>{seg.aircraft}</div>
+                            <div style={{ fontSize: 10, color: li === 0 ? "#c0623a" : C.greenDark }}>{seg.cabin}</div>
+                          </div>
+                        </div>
+
+                        <div style={{ padding: "16px 16px 12px" }}>
+                          <div style={{ display: "flex", alignItems: "center" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: -1, lineHeight: 1 }}>{seg.from.time}</div>
+                              <div style={{ fontSize: 20, fontWeight: 700, color: li === 0 ? C.accent : C.green, marginTop: 3 }}>{seg.from.code}</div>
+                              <div style={{ fontSize: 10, color: C.textMid, marginTop: 2, lineHeight: 1.4 }}>{seg.from.name}</div>
+                              <div style={{ fontSize: 10, color: C.green, fontWeight: 600, marginTop: 2 }}>{seg.from.terminal}</div>
+                            </div>
+                            <div style={{ flexShrink: 0, textAlign: "center", padding: "0 8px" }}>
+                              <div style={{ fontSize: 9.5, color: C.textLight, marginBottom: 5 }}>{seg.duration}</div>
+                              <div style={{ display: "flex", alignItems: "center" }}>
+                                <div style={{ height: 1.5, width: 44, background: `linear-gradient(90deg,${li===0?C.accent:C.green}55,${li===0?C.accent:C.green})` }} />
+                                <span style={{ fontSize: 16, lineHeight: 1 }}>✈</span>
+                              </div>
+                              <div style={{ fontSize: 9, color: C.textLight, marginTop: 4 }}>直飛</div>
+                            </div>
+                            <div style={{ flex: 1, textAlign: "right" }}>
+                              <div style={{ fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: -1, lineHeight: 1 }}>{seg.to.time}</div>
+                              <div style={{ fontSize: 20, fontWeight: 700, color: li === 0 ? C.accent : C.green, marginTop: 3 }}>{seg.to.code}</div>
+                              <div style={{ fontSize: 10, color: C.textMid, marginTop: 2, lineHeight: 1.4 }}>{seg.to.name}</div>
+                              <div style={{ fontSize: 10, color: C.green, fontWeight: 600, marginTop: 2 }}>{seg.to.terminal}</div>
+                            </div>
+                          </div>
+                          {seg.note && (
+                            <div style={{ marginTop: 12, padding: "9px 12px", background: li === 0 ? "#fff7f0" : C.greenLight, borderRadius: 8, fontSize: 11.5, color: li === 0 ? C.accent : C.greenDark, lineHeight: 1.7 }}>
+                              💡 {seg.note}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+
+                <div style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, padding: "14px 16px", marginBottom: 12, boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>⚠️ 行李規定</div>
+                  {FLIGHTS.baggage.map((b, i) => (
+                    <div key={i} style={{ fontSize: 12.5, color: C.textMid, marginBottom: 6, lineHeight: 1.6, paddingLeft: 8, borderLeft: `2.5px solid ${C.accent}` }}>{b}</div>
+                  ))}
+                </div>
+
+                <div style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, padding: "14px 16px", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>出發前確認清單</div>
+                  {FLIGHTS.reminders.map((r, i) => (
+                    <div key={i} style={{ fontSize: 12.5, color: C.textMid, marginBottom: 7, lineHeight: 1.6 }}>{r}</div>
+                  ))}
+                </div>
+
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 40, background: C.greenBand, height: 8 }} />
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<OsakaTrip />);
+  </script>
+</body>
+</html>
