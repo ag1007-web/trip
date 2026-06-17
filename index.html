@@ -4,10 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>大阪四天之旅</title>
-  <!-- 替換為更穩定快速的 Cloudflare CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-  <!-- 載入 Babel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.6/babel.min.js" crossorigin="anonymous"></script>
   <style>
     body { margin: 0; padding: 0; background-color: #f0ebe0; font-family: 'Helvetica Neue', 'PingFang TC', 'Microsoft JhengHei', sans-serif; }
@@ -84,18 +82,16 @@
         "💧 液體每件不超過 100ml，裝於透明夾鏈袋（隨身）",
       ],
       reminders: [
-        "✅ 去程訂位代號：YUXUMY（林先生・林小弟）",
-        "✅ 回程訂位代號：ACPDHD（魏太太・李太太）",
-        "✅ Thai Lion Air 於起飛前48小時開放線上 Check-in",
+        "✅ 叫車準備：請於台灣先下載好 Uber 與 GO Taxi 兩款叫車APP並綁定信用卡",
+        "✅ 計程車超完美：3大1小剛好可搭乘1台一般標準計程車（限乘4人），移動非常方便又省錢！",
         "✅ 手提行李＋個人物品合計不超過 7 公斤，無免費托運",
         "✅ 請攜帶與購票相同之身分證明文件（護照）",
         "✅ 關西機場建議起飛前3小時抵達（10:30前）",
         "✅ 南海電鐵特急 Rapi:t（難波→關西機場）建議提前購票",
-        "✅ 出發前確認全員護照效期超過6個月",
       ],
     };
 
-    // ── Trip data (Integrated with Pocket List) ──────────────────────────────────
+    // ── Trip data (Integrated with Taxi Logistics) ──────────────────────────────────
     const DEFAULT_TRIP = {
       title: "大阪四天之旅 🏯",
       days: [
@@ -104,9 +100,9 @@
           spots: [
             { time: "12:30", name: "✈️ 抵達關西機場", note: "入境後前往南海電鐵，購票搭乘特急列車", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "大阪府泉佐野市泉州空港北1", done: false, pass: false },
             { time: "13:30", name: "🚃 南海電鐵特急 → 難波站", note: "約34分鐘直達難波，今日使用ICOCA或買單程票", mapUrl: "https://maps.google.com/?q=南海難波站", address: "大阪市中央区難波5丁目1-60", done: false, pass: false },
-            { time: "14:30", name: "🏨 飯店入住 / 放置行李", note: "搭計程車前往飯店，讓長輩稍作休息", mapUrl: "https://maps.google.com/?q=34.657529,135.508101", address: "〒556-0006 大阪市浪速区日本橋東3丁目6番", done: false, pass: false },
+            { time: "14:30", name: "🚕 難波站轉乘計程車 → 飯店", note: "出站後直接搭乘計程車前往飯店，車程約5-10分鐘，長輩不用拖行李走路", mapUrl: "https://maps.google.com/?q=34.657529,135.508101", address: "〒556-0006 大阪市浪速区日本橋東3丁目6番", done: false, pass: false },
             { time: "15:30", name: "🛍️ 心齋橋/道頓堀周邊逛街", note: "帶家人輕鬆逛街。沿途可逛 大創DAISO 戎橋店、3COINS+plus 等", mapUrl: "https://maps.google.com/?q=心齋橋", address: "大阪市中央区心斎橋筋", done: false, pass: false },
-            { time: "17:00", name: "🛒 LIFE Shimodera Store 補給", note: "重點任務！買大罐水、茶飲、幼兒零食與當季水果。東西重可搭計程車回飯店。", mapUrl: "https://maps.google.com/?q=34.6585212,135.509623", address: "大阪市浪速区下寺", done: false, pass: false },
+            { time: "17:00", name: "🛒 LIFE Shimodera Store 補給", note: "重點任務！買大罐水、茶飲、幼兒零食與當季水果。回程直接搭計程車回飯店。", mapUrl: "https://maps.google.com/?q=34.6585212,135.509623", address: "大阪市浪速区下寺", done: false, pass: false },
             { time: "18:30", name: "🍽️ 難波周邊晚餐", note: "推薦重亭漢堡排、一芳亭燒賣或大起水產回轉壽司", mapUrl: "https://maps.google.com/?q=難波", address: "難波周邊", done: false, pass: false },
           ],
           restaurants: [
@@ -151,14 +147,14 @@
         {
           id: 2, label: "6/26 五", date: "Day 2｜周遊卡 Day 1 🎫", theme: "港灣觀覽車與天王寺動物園", emoji: "🎡",
           spots: [
-            { time: "出發前", name: "💡 周遊卡啟動！", note: "地鐵全線免費搭乘，記得帶周遊卡出門！", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:00", name: "🚇 飯店出發 → 大阪港（天保山）", note: "搭乘地鐵前往大阪港站，開始一天的港灣行程", mapUrl: "https://maps.google.com/?q=大阪港站", address: "地鐵大阪港站", done: false, pass: false },
+            { time: "出發前", name: "💡 周遊卡啟動！(省門票)", note: "今日全線以計程車移動，但周遊卡依然能省下巨額門票費用！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:00", name: "🚕 飯店叫車 → 大阪港（天保山）", note: "車程約25分鐘 (預估車資1台約 ¥3500-¥4000)。上車前將地址指給司機看。", mapUrl: "https://maps.google.com/?q=大阪港", address: "大阪市港区海岸通1丁目1-10", done: false, pass: false },
             { time: "09:30", name: "🎡 天保山大摩天輪", note: "【必去/周遊卡免費】搭乘巨大摩天輪俯瞰大阪灣，小孩會對寬闊視野感到興奮 (4歲需現場購票約 ¥500)", mapUrl: "https://maps.google.com/?q=天保山大摩天輪", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
             { time: "10:30", name: "⛵ 帆船型觀光船 聖瑪麗亞號", note: "【順遊/周遊卡免費】搭乘仿古帆船航行大阪港45分鐘，1樓有互動船艙可探險 (4歲免費)", mapUrl: "https://maps.google.com/?q=帆船型観光船サンタマリア", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
             { time: "11:30", name: "🍱 天保山市場街 浪速美食橫丁", note: "商場內的復古美食街，有許多免排隊且適合親子的餐廳", mapUrl: "https://maps.google.com/?q=天保山マーケットプレース", address: "大阪市港区海岸通1丁目1-10 2F", done: false, pass: false },
-            { time: "13:00", name: "🚇 大阪港 → 動物園前站", note: "搭乘中央線至本町，轉御堂筋線至動物園前站", mapUrl: "https://maps.google.com/?q=動物園前站", address: "地鐵動物園前站", done: false, pass: false },
+            { time: "13:00", name: "🚕 大阪港叫車 → 天王寺動物園", note: "車程約20分鐘 (預估車資1台約 ¥3000-¥3500)。小孩剛好可以在車上舒服睡午覺補眠。", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: false },
             { time: "13:30", name: "🐧 天王寺動物園放電", note: "【必去/周遊卡免費】超過百年歷史，看獅子與企鵝！園區大小適中，逛起來不會讓小孩過度疲累 (4歲以下免費)", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: true },
-            { time: "16:30", name: "🚇 動物園前 → 道頓堀", note: "玩累了搭地鐵回道頓堀，建議先到乘船處兌換晚間班次船票", mapUrl: "https://maps.google.com/?q=道頓堀", address: "大阪市中央区道頓堀", done: false, pass: false },
+            { time: "16:30", name: "🚕 動物園叫車 → 道頓堀", note: "車程約10分鐘 (預估車資1台約 ¥1500)。玩累了搭車直達，建議先到乘船處兌換晚間船票", mapUrl: "https://maps.google.com/?q=道頓堀", address: "大阪市中央区道頓堀", done: false, pass: false },
             { time: "17:00", name: "🚤 道頓堀水上觀光船", note: "【必去/周遊卡免費】晚餐前後搭觀光船穿梭霓虹燈海 (4歲小孩由大人抱坐免費)", mapUrl: "https://maps.google.com/?q=太左衛門橋船着場", address: "太左衛門橋船著場 (驚安殿堂前)", done: false, pass: true },
             { time: "18:00", name: "🥩 道頓堀晚餐", note: "享受燒肉吃到飽或大阪燒，結束海陸充實的一天", mapUrl: "https://maps.google.com/?q=道頓堀", address: "道頓堀周邊", done: false, pass: false },
           ],
@@ -182,22 +178,13 @@
               tips: ["建議提早預約", "單點制，可依個人食量控制預算"],
             },
             {
-              meal: "晚餐 備選", emoji: "🥞", name: "なにわのお好み焼じろ",
-              genre: "大阪燒", budget: "¥1,500–2,500", area: "梅田",
-              hours: "11:00–23:00",
-              mapUrl: "https://maps.google.com/?q=34.744522,135.498272",
-              address: "此店位於新大阪附近，若非特意前往較遠，可考慮道頓堀的美津の",
-              recommend: "您的口袋清單中的大阪燒！",
-              tips: ["距離主要活動區域較遠，需評估長輩體力"],
-            },
-             {
-              meal: "宵夜", emoji: "🍻", name: "今日しかない 居酒屋",
-              genre: "居酒屋", budget: "¥2,000-4,000", area: "新大阪",
-              hours: "17:00-00:00",
-              mapUrl: "https://maps.google.com/?q=34.7425175,135.4988011",
-              address: "新大阪",
-              recommend: "您的口袋清單！但距離難波較遠，若不嫌遠可前往體驗。",
-              tips: ["距離難波稍遠"],
+              meal: "晚餐 備選", emoji: "🥞", name: "美津濃大阪燒（美津の）",
+              genre: "大阪燒", budget: "¥1,500–2,500", area: "道頓堀",
+              hours: "11:00–21:00 (週三休)",
+              mapUrl: "https://maps.google.com/?q=34.6690,135.5010",
+              address: "大阪市中央区道頓堀1丁目4-15",
+              recommend: "米其林必比登連年推薦！招牌「美津乃燒」有蝦、魷魚、章魚、豬肉等豐富配料，山藥燒口感清爽，全大阪最推薦的大阪燒。",
+              tips: ["每人低消一份餐點", "經常大排長龍，需預留時間"],
             }
           ],
         },
@@ -205,15 +192,15 @@
           id: 3, label: "6/27 六", date: "Day 3｜周遊卡 Day 2 🎫", theme: "巨型室內攀爬城堡與大阪城小火車", emoji: "🏰",
           spots: [
             { time: "出發前", name: "💡 周遊卡 Day 2 繼續省！", note: "今日堅守大阪市區，不去奈良，以免浪費周遊卡價值！", mapUrl: "", address: "", done: false, pass: false },
-            { time: "08:30", name: "🏨 飯店吃完早餐出發", note: "在飯店悠閒吃完早餐後，準備前往兒童樂園", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:30", name: "🚇 飯店 → 扇町站", note: "搭乘堺筋線直達扇町站（Kids Plaza Osaka）", mapUrl: "https://maps.google.com/?q=扇町站", address: "地鐵扇町站", done: false, pass: false },
+            { time: "08:30", name: "🏨 飯店吃完早餐出發", note: "在飯店悠閒吃完早餐後，準備叫車前往兒童樂園", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:30", name: "🚕 飯店叫車 → 兒童樂園 (扇町)", note: "車程約15分鐘 (預估車資1台約 ¥2000-¥2500)。直達大門免走樓梯。", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
             { time: "10:00", name: "🏰 大阪兒童樂園 (Kids Plaza)", note: "【必去/周遊卡出示折價】全日本頂級兒童博物館！趁早上去人較少，室內冷氣舒適，玩到中午剛好 (4歲自費約¥500)", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
-            { time: "12:30", name: "🍱 扇町 / 天神橋筋 午餐", note: "【順遊】日本第一長「天神橋筋商店街」，邊吃邊逛，順便買中村屋可樂餅", mapUrl: "https://maps.google.com/?q=天神橋筋商店街", address: "大阪市北区天神橋", done: false, pass: false },
-            { time: "13:30", name: "🚇 扇町 → 大阪城（谷町四丁目站）", note: "搭乘堺筋線至堺筋本町，轉中央線至谷町四丁目", mapUrl: "https://maps.google.com/?q=谷町四丁目站", address: "地鐵谷町四丁目站", done: false, pass: false },
+            { time: "12:30", name: "🍱 天神橋筋 午餐", note: "【順遊】日本第一長「天神橋筋商店街」，邊吃邊逛，順便買中村屋可樂餅", mapUrl: "https://maps.google.com/?q=天神橋筋商店街", address: "大阪市北区天神橋", done: false, pass: false },
+            { time: "13:30", name: "🚕 兒童樂園叫車 → 大阪城", note: "車程約15分鐘 (預估車資1台約 ¥1500-¥2000)。建議請司機停在離天守閣最近的下車點。", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: false },
             { time: "14:00", name: "🏯 大阪城天守閣", note: "【必去/周遊卡免費】在宏偉的護城河旁散步、拍照非常漂亮 (城堡內樓梯多不適合推車，4歲免費)", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: true },
             { time: "15:00", name: "🌳 大阪城西之丸庭園", note: "【順遊/周遊卡免費】天守閣旁的大片平坦草地，讓小孩奔跑放電、拍攝城堡全景的最佳無障礙景點", mapUrl: "https://maps.google.com/?q=大阪城西の丸庭園", address: "大阪城公園內", done: false, pass: true },
-            { time: "15:30", name: "🚂 大阪城公園路面小火車", note: "從天守閣搭乘小火車回到地鐵站 (單程約¥400自費)，4歲小孩會坐得非常開心", mapUrl: "https://maps.google.com/?q=大阪城公園", address: "大阪城公園內乘車處", done: false, pass: false },
-            { time: "16:30", name: "🚇 大阪城 → 惠美須町 (新世界)", note: "搭乘中央線至堺筋本町，轉堺筋線直達惠美須町站", mapUrl: "https://maps.google.com/?q=惠美須町站", address: "地鐵惠美須町站", done: false, pass: false },
+            { time: "15:30", name: "🚂 大阪城公園路面小火車", note: "從天守閣搭乘小火車回到公園外圍 (單程約¥400自費)，4歲小孩會坐得非常開心", mapUrl: "https://maps.google.com/?q=大阪城公園", address: "大阪城公園內乘車處", done: false, pass: false },
+            { time: "16:30", name: "🚕 大阪城叫車 → 新世界老街", note: "車程約20分鐘 (預估車資1台約 ¥2500-¥3000)。直達通天閣下方。", mapUrl: "https://maps.google.com/?q=通天閣", address: "大阪市浪速区恵美須東1丁目18-6", done: false, pass: false },
             { time: "17:00", name: "🗼 新世界老街與通天閣", note: "【必去/周遊卡免費】造訪充滿浮誇霓虹招牌的新世界老街，並登上通天閣俯瞰夜景", mapUrl: "https://maps.google.com/?q=通天閣", address: "大阪市浪速区恵美須東1丁目18-6", done: false, pass: true },
             { time: "18:00", name: "🍢 新世界晚餐", note: "在串炸發源地品嚐大阪名物，多有榻榻米座位適合家庭", mapUrl: "https://maps.google.com/?q=新世界本通商店街", address: "大阪市浪速区恵美須東", done: false, pass: false },
           ],
@@ -251,8 +238,8 @@
           id: 4, label: "6/28 日", date: "Day 4｜賦歸", theme: "離開前的大阪日常 × 悠閒早晨", emoji: "🛫",
           spots: [
             { time: "早上", name: "😴 睡到自然醒", note: "周遊卡已於凌晨2:59失效，功成身退。今日輕鬆過！", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:00", name: "🐟 黑門市場 (或改飯店周邊吃早餐)", note: "若時間允許，可至黑門市場體驗大阪廚房，或在飯店周圍找間咖啡廳吃早餐", mapUrl: "https://maps.google.com/?q=黑門市場", address: "大阪市中央区日本橋", done: false, pass: false },
-            { time: "10:00", name: "🚃 難波站 → 關西機場（南海電鐵特急）", note: "約34分鐘直達關西機場第一航廈，建議購買特急券確保座位", mapUrl: "https://maps.google.com/?q=南海難波站", address: "南海難波車站", done: false, pass: false },
+            { time: "09:00", name: "🚕 飯店叫車出發 → 黑門市場", note: "若時間允許，搭短程計程車至黑門市場體驗大阪廚房吃早餐", mapUrl: "https://maps.google.com/?q=黑門市場", address: "大阪市中央区日本橋", done: false, pass: false },
+            { time: "10:00", name: "🚕 黑門市場叫車 → 難波站", note: "轉乘南海電鐵特急（約34分鐘直達關西機場第一航廈）", mapUrl: "https://maps.google.com/?q=南海難波站", address: "南海難波車站", done: false, pass: false },
             { time: "11:00", name: "🛍️ 臨空城 Outlet (可選行程)", note: "【備案/購物】若提早到機場區域，可考慮將行李寄放後前往臨空城最後採買 (注意搭機時間)", mapUrl: "https://maps.google.com/?q=34.4107338,135.2996108", address: "臨空城 Rinku Premium Outlets", done: false, pass: false },
             { time: "13:30", name: "✈️ 搭機回台", note: "⚠️ 機場最後30分鐘最危險！買伴手禮容易爆預算。辦理免稅退稅記得預留排隊時間。", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "關西國際機場 (KIX) 第一航廈", done: false, pass: false },
           ],
@@ -278,7 +265,7 @@
           ],
         },
       ],
-      notes: "🆘 【家庭團生存急救指南】\n1. 小孩崩潰/太累：直接進入最近的百貨公司（如難波 Parks、大丸），避開街頭，室內冷氣與乾淨廁所是救星。\n2. 長輩腳痛：果斷放棄後續景點，搜尋半徑 500m 內的「喫茶店」坐下休息。\n3. 行程落後：不要有壓力，直接刪除下午場景點，提早進入晚餐環節。\n4. 交通決策：只要步行超過 10 分鐘，請毫不猶豫地搭乘計程車！\n\n☔ 【雨天備案】\n若遇大雨，戶外行程(如大阪城、動物園)不便，可替換為：\n- 備案一：【大阪生活今昔館】(周遊卡免費) - 室內體驗江戶時代大阪風情，地鐵天神橋筋六丁目站直達。\n- 備案二：加長【Kids Plaza 大阪兒童樂園】停留時間，旁邊就是日本最長天神橋筋商店街，有屋頂完全不怕雨。\n- 備案三：【海遊館】(需另外購票) - 天保山旁，世界最大級室內水族館。\n- 備案四(回程)：【臨空城 Outlet】 - 若最後一天下雨沒地方去，可提早前往機場附近的 Outlet 室內逛街。",
+      notes: "🚕 【計程車移動指南 (好消息！)】\n1. 完美配置：日本一般計程車(含JPN Taxi)限乘4名乘客。貴團「3大1小」剛好可以同坐 1 台車，不用拆車，移動超方便且車資減半！\n2. 必備 APP：強烈建議在台灣先下載好「Uber」或日本當地的「GO Taxi」並綁好信用卡，可省去語言不通或付現找零的麻煩。\n3. 給司機看地址：行程表中皆附有日文詳細地址，上車直接指給司機看即可。\n4. 費用分攤：單趟 ¥1500-¥4000 的車資，因為只有一台車，四人分攤下來跟搭地鐵差不多，還能換取長輩與小孩的體力與情緒穩定，CP值極高！\n\n☔ 【雨天備案】\n若遇大雨戶外行程(如大阪城、動物園)不便，可替換為：\n- 備案一：【大阪生活今昔館】(周遊卡免費) - 室內體驗江戶時代大阪風情。\n- 備案二：加長【Kids Plaza 大阪兒童樂園】停留時間，旁邊就是日本最長天神橋筋商店街，有屋頂完全不怕雨。\n- 備案三：【海遊館】(需另外購票) - 天保山旁，世界最大級室內水族館。\n- 備案四(回程)：【臨空城 Outlet】 - 若最後一天下雨，可提早前往機場附近的 Outlet 室內逛街。",
       lastUpdated: new Date().toISOString(),
     };
 
@@ -397,7 +384,7 @@
 
       const loadTrip = () => {
         try {
-          const saved = localStorage.getItem("osaka-trip-v10-readonly");
+          const saved = localStorage.getItem("osaka-trip-v12-taxi");
           setTrip(saved ? JSON.parse(saved) : DEFAULT_TRIP);
         } catch { setTrip(DEFAULT_TRIP); }
         setLoaded(true);
@@ -406,7 +393,7 @@
       const saveTrip = (data) => {
         const updated = { ...data, lastUpdated: new Date().toISOString() };
         try { 
-            localStorage.setItem("osaka-trip-v10-readonly", JSON.stringify(updated)); 
+            localStorage.setItem("osaka-trip-v12-taxi", JSON.stringify(updated)); 
             setTrip(updated); 
         } catch (e) { console.error(e); }
       };
@@ -592,7 +579,7 @@
                 )}
 
                 <div style={{ marginTop: 18, padding: "14px 16px", background: C.greenLight, borderRadius: 12, border: `1px solid ${C.green}33` }}>
-                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 7 }}>小提醒 & ☔ 雨天備案</div>
+                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 7 }}>小提醒 & ☔ 雨天/交通備案</div>
                   <div style={{ fontSize: 13, color: C.greenDark, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{trip && trip.notes}</div>
                 </div>
               </>
