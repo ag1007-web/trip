@@ -19,6 +19,33 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
+    // ── Accommodation data ────────────────────────────────────────────────────────
+    const ACCOMMODATION = {
+      name: "SuYi 401 (素以)",
+      address: "〒556-0006 大阪市浪速区日本橋東3丁目6番",
+      mapUrl: "https://maps.google.com/?q=34.657529,135.508101",
+      website: "https://tiancheng525.wixsite.com/suyi401",
+      room: "公寓 4樓 401室",
+      capacity: "家庭最佳尺寸 (最多7人)",
+      description: "大阪市立合法私人旅館，提供日常生活所需的完整家具和家電，不需自備。距離惠美須町站、通天閣、日本橋電器街皆在步行範圍內，交通極為便捷。",
+      amenities: [
+        { icon: "📶", label: "免費 WiFi" },
+        { icon: "❄️", label: "冷暖空調" },
+        { icon: "🍳", label: "設備齊全廚房" },
+        { icon: "🧊", label: "雙門冰箱" },
+        { icon: "♨️", label: "微波爐 & 熱水壺" },
+        { icon: "🧺", label: "獨立洗衣機" },
+        { icon: "🍽️", label: "烹飪工具與餐具" },
+        { icon: "📺", label: "平面電視" }
+      ],
+      reminders: [
+        "入內請脫鞋，保持環境整潔",
+        "日本實施嚴格垃圾分類，請務必依循房東指南處理",
+        "住宅區夜間請降低音量，避免影響當地鄰居",
+        "外出及退房時，請確保關閉冷氣及所有電源，節約能源"
+      ]
+    };
+
     // ── Flight data ───────────────────────────────────────────────────────────────
     const FLIGHTS = {
       bookings: [
@@ -91,19 +118,21 @@
       ],
     };
 
-    // ── Trip data (Integrated with Taxi Logistics) ──────────────────────────────────
+    // ── Trip data (With Enhanced Rain Backup) ───────────────────────────────────────
     const DEFAULT_TRIP = {
       title: "大阪四天之旅 🏯",
       days: [
         {
           id: 1, label: "6/25 四", date: "Day 1｜難波慢開機日", theme: "抵達大阪 × 舒適入住與在地補給", emoji: "🏮",
+          rainBackup: "☔ 降雨機率 100%（今日機率全程最高）\n心齋橋筋商店街全段有遮雨拱廊，逛街吃飯完全不受影響，行程正常照走即可，無需更動。\n\n🚕 計程車小提醒：日本一般計程車限乘4人，貴團「3大1小」剛好一車，建議先在台灣下載好 Uber／GO Taxi 並綁定信用卡，雨天移動更省力。",
           spots: [
+            { time: "出發前", name: "☔ 抵達日降雨機率高 (100%)", note: "今日預報整天有雨！心齋橋/道頓堀逛街全程有騎樓與地下街可遮雨，無須取消行程，但建議全員攜帶輕便雨具，搭計程車儘量選擇有遮棚的上下車點", mapUrl: "", address: "", done: false, pass: false },
             { time: "12:30", name: "✈️ 抵達關西機場", note: "入境後前往南海電鐵，購票搭乘特急列車", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "大阪府泉佐野市泉州空港北1", done: false, pass: false },
             { time: "13:30", name: "🚃 南海電鐵特急 → 難波站", note: "約34分鐘直達難波，今日使用ICOCA或買單程票", mapUrl: "https://maps.google.com/?q=南海難波站", address: "大阪市中央区難波5丁目1-60", done: false, pass: false },
-            { time: "14:30", name: "🚕 難波站轉乘計程車 → 飯店", note: "出站後直接搭乘計程車前往飯店，車程約5-10分鐘，長輩不用拖行李走路", mapUrl: "https://maps.google.com/?q=34.657529,135.508101", address: "〒556-0006 大阪市浪速区日本橋東3丁目6番", done: false, pass: false },
-            { time: "15:30", name: "🛍️ 心齋橋/道頓堀周邊逛街", note: "帶家人輕鬆逛街。沿途可逛 大創DAISO 戎橋店、3COINS+plus 等", mapUrl: "https://maps.google.com/?q=心齋橋", address: "大阪市中央区心斎橋筋", done: false, pass: false },
+            { time: "14:30", name: "🚕 難波站轉乘計程車 → 飯店", note: "出站後直接搭乘計程車前往飯店，車程約5-10分鐘，長輩不用拖行李走路，雨天更省力", mapUrl: "https://maps.google.com/?q=34.657529,135.508101", address: "〒556-0006 大阪市浪速区日本橋東3丁目6番", done: false, pass: false },
+            { time: "15:30", name: "🛍️ 心齋橋/道頓堀周邊逛街", note: "帶家人輕鬆逛街。沿途可逛 大創DAISO 戎橋店、3COINS+plus 等（【雨備】心齋橋筋商店街全段有遮雨拱廊，下雨完全無影響）", mapUrl: "https://maps.google.com/?q=心齋橋", address: "大阪市中央区心斎橋筋", done: false, pass: false },
             { time: "17:00", name: "🛒 LIFE Shimodera Store 補給", note: "重點任務！買大罐水、茶飲、幼兒零食與當季水果。回程直接搭計程車回飯店。", mapUrl: "https://maps.google.com/?q=34.6585212,135.509623", address: "大阪市浪速区下寺", done: false, pass: false },
-            { time: "18:30", name: "🍽️ 難波周邊晚餐", note: "推薦重亭漢堡排、一芳亭燒賣或大起水產回轉壽司", mapUrl: "https://maps.google.com/?q=難波", address: "難波周邊", done: false, pass: false },
+            { time: "18:30", name: "🍽️ 難波周邊晚餐", note: "推薦重亭漢堡排、一芳亭燒賣或大起水產回轉壽司，皆為室內用餐，雨天無虞", mapUrl: "https://maps.google.com/?q=難波", address: "難波周邊", done: false, pass: false },
           ],
           restaurants: [
             {
@@ -145,60 +174,17 @@
           ],
         },
         {
-          id: 2, label: "6/26 五", date: "Day 2｜周遊卡 Day 1 🎫", theme: "港灣觀覽車與天王寺動物園", emoji: "🎡",
+          id: 2, label: "6/26 五", date: "Day 2｜周遊卡 Day 1 🎫", theme: "巨型室內樂園與大阪城小火車", emoji: "🏰",
+          rainBackup: "☔ 大雨警戒日・降雨機率 85%（梅雨前線最強的一天，慎防中大雨）\n行程已主打室內的【大阪兒童樂園】及有遮雨棚的【天神橋筋商店街】，上半天不受影響。\n\n若午後大阪城段遇大雨：可直接取消戶外的天守閣與西之丸庭園，改搭車到天神橋筋六丁目站旁的【大阪生活今昔館】(周遊卡免費，全室內江戶時代體驗)。",
           spots: [
-            { time: "出發前", name: "💡 周遊卡啟動！(省門票)", note: "今日全線以計程車移動，但周遊卡依然能省下巨額門票費用！", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:00", name: "🚕 飯店叫車 → 大阪港（天保山）", note: "車程約25分鐘 (預估車資1台約 ¥3500-¥4000)。上車前將地址指給司機看。", mapUrl: "https://maps.google.com/?q=大阪港", address: "大阪市港区海岸通1丁目1-10", done: false, pass: false },
-            { time: "09:30", name: "🎡 天保山大摩天輪", note: "【必去/周遊卡免費】搭乘巨大摩天輪俯瞰大阪灣，小孩會對寬闊視野感到興奮 (4歲需現場購票約 ¥500)", mapUrl: "https://maps.google.com/?q=天保山大摩天輪", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
-            { time: "10:30", name: "⛵ 帆船型觀光船 聖瑪麗亞號", note: "【順遊/周遊卡免費】搭乘仿古帆船航行大阪港45分鐘，1樓有互動船艙可探險 (4歲免費)", mapUrl: "https://maps.google.com/?q=帆船型観光船サンタマリア", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
-            { time: "11:30", name: "🍱 天保山市場街 浪速美食橫丁", note: "商場內的復古美食街，有許多免排隊且適合親子的餐廳", mapUrl: "https://maps.google.com/?q=天保山マーケットプレース", address: "大阪市港区海岸通1丁目1-10 2F", done: false, pass: false },
-            { time: "13:00", name: "🚕 大阪港叫車 → 天王寺動物園", note: "車程約20分鐘 (預估車資1台約 ¥3000-¥3500)。小孩剛好可以在車上舒服睡午覺補眠。", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: false },
-            { time: "13:30", name: "🐧 天王寺動物園放電", note: "【必去/周遊卡免費】超過百年歷史，看獅子與企鵝！園區大小適中，逛起來不會讓小孩過度疲累 (4歲以下免費)", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: true },
-            { time: "16:30", name: "🚕 動物園叫車 → 道頓堀", note: "車程約10分鐘 (預估車資1台約 ¥1500)。玩累了搭車直達，建議先到乘船處兌換晚間船票", mapUrl: "https://maps.google.com/?q=道頓堀", address: "大阪市中央区道頓堀", done: false, pass: false },
-            { time: "17:00", name: "🚤 道頓堀水上觀光船", note: "【必去/周遊卡免費】晚餐前後搭觀光船穿梭霓虹燈海 (4歲小孩由大人抱坐免費)", mapUrl: "https://maps.google.com/?q=太左衛門橋船着場", address: "太左衛門橋船著場 (驚安殿堂前)", done: false, pass: true },
-            { time: "18:00", name: "🥩 道頓堀晚餐", note: "享受燒肉吃到飽或大阪燒，結束海陸充實的一天", mapUrl: "https://maps.google.com/?q=道頓堀", address: "道頓堀周邊", done: false, pass: false },
-          ],
-          restaurants: [
-             {
-              meal: "午餐 推薦", emoji: "🧇", name: "天保山 浪速美食橫丁",
-              genre: "親子午餐/輕食", budget: "¥800–1,500", area: "天保山市場街",
-              hours: "11:00–20:00",
-              mapUrl: "https://maps.google.com/?q=34.6540,135.4320",
-              address: "大阪市港区海岸通1丁目1-10 2F",
-              recommend: "下船後直接走進商場的復古美食街，有自由軒咖哩、北極星蛋包飯等名店，選擇多且適合小孩，室內冷氣充足是最舒服的休息點。",
-              tips: ["有兒童椅與育嬰室", "找免排隊的店吃即可，把體力留給下午動物園"],
-            },
-            {
-              meal: "晚餐 首選 ⭐", emoji: "🥩", name: "但馬屋 デラックス DX 心斎橋店",
-              genre: "燒肉", budget: "¥4,000–6,000", area: "心齋橋",
-              hours: "11:00–23:00",
-              mapUrl: "https://maps.google.com/?q=34.6692819,135.5015241",
-              address: "大阪市中央区宗右衛門町",
-              recommend: "您的口袋清單！環境舒適的燒肉店，提供高品質的黑毛和牛。適合一家人好好吃頓大餐慰勞一天的辛勞。",
-              tips: ["建議提早預約", "單點制，可依個人食量控制預算"],
-            },
-            {
-              meal: "晚餐 備選", emoji: "🥞", name: "美津濃大阪燒（美津の）",
-              genre: "大阪燒", budget: "¥1,500–2,500", area: "道頓堀",
-              hours: "11:00–21:00 (週三休)",
-              mapUrl: "https://maps.google.com/?q=34.6690,135.5010",
-              address: "大阪市中央区道頓堀1丁目4-15",
-              recommend: "米其林必比登連年推薦！招牌「美津乃燒」有蝦、魷魚、章魚、豬肉等豐富配料，山藥燒口感清爽，全大阪最推薦的大阪燒。",
-              tips: ["每人低消一份餐點", "經常大排長龍，需預留時間"],
-            }
-          ],
-        },
-        {
-          id: 3, label: "6/27 六", date: "Day 3｜周遊卡 Day 2 🎫", theme: "巨型室內攀爬城堡與大阪城小火車", emoji: "🏰",
-          spots: [
-            { time: "出發前", name: "💡 周遊卡 Day 2 繼續省！", note: "今日堅守大阪市區，不去奈良，以免浪費周遊卡價值！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "出發前", name: "☔ 大雨警戒日 (降雨機率85%)", note: "梅雨前線今日最強，預估雨量可能達中大雨等級！行程已全面安排室內兒童樂園與遮雨拱廊放電，全線計程車搭配周遊卡折價/免費，移動全程不需淋雨", mapUrl: "", address: "", done: false, pass: false },
             { time: "08:30", name: "🏨 飯店吃完早餐出發", note: "在飯店悠閒吃完早餐後，準備叫車前往兒童樂園", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:30", name: "🚕 飯店叫車 → 兒童樂園 (扇町)", note: "車程約15分鐘 (預估車資1台約 ¥2000-¥2500)。直達大門免走樓梯。", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
+            { time: "09:30", name: "🚕 飯店叫車 → 兒童樂園 (扇町)", note: "車程約15分鐘 (預估車資1台約 ¥2000-¥2500)。直達大門免淋雨走樓梯。", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
             { time: "10:00", name: "🏰 大阪兒童樂園 (Kids Plaza)", note: "【必去/周遊卡出示折價】全日本頂級兒童博物館！趁早上去人較少，室內冷氣舒適，玩到中午剛好 (4歲自費約¥500)", mapUrl: "https://maps.google.com/?q=キッズプラザ大阪", address: "大阪市北区扇町2丁目1-7", done: false, pass: false },
-            { time: "12:30", name: "🍱 天神橋筋 午餐", note: "【順遊】日本第一長「天神橋筋商店街」，邊吃邊逛，順便買中村屋可樂餅", mapUrl: "https://maps.google.com/?q=天神橋筋商店街", address: "大阪市北区天神橋", done: false, pass: false },
-            { time: "13:30", name: "🚕 兒童樂園叫車 → 大阪城", note: "車程約15分鐘 (預估車資1台約 ¥1500-¥2000)。建議請司機停在離天守閣最近的下車點。", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: false },
-            { time: "14:00", name: "🏯 大阪城天守閣", note: "【必去/周遊卡免費】在宏偉的護城河旁散步、拍照非常漂亮 (城堡內樓梯多不適合推車，4歲免費)", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: true },
-            { time: "15:00", name: "🌳 大阪城西之丸庭園", note: "【順遊/周遊卡免費】天守閣旁的大片平坦草地，讓小孩奔跑放電、拍攝城堡全景的最佳無障礙景點", mapUrl: "https://maps.google.com/?q=大阪城西の丸庭園", address: "大阪城公園內", done: false, pass: true },
+            { time: "12:30", name: "🍱 天神橋筋 午餐", note: "【順遊】日本第一長「天神橋筋商店街」有遮雨棚，邊吃邊逛，順便買中村屋可樂餅", mapUrl: "https://maps.google.com/?q=天神橋筋商店街", address: "大阪市北区天神橋", done: false, pass: false },
+            { time: "13:30", name: "🚕 兒童樂園叫車 → 大阪城", note: "車程約15分鐘 (預估車資1台約 ¥1500-¥2000)。若下大雨，此段可改去隔壁的【大阪生活今昔館】。", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: false },
+            { time: "14:00", name: "🏯 大阪城天守閣", note: "【必去/周遊卡免費】在宏偉的護城河旁散步、拍照非常漂亮 (若下大雨可取消)", mapUrl: "https://maps.google.com/?q=大阪城天守閣", address: "大阪市中央区大阪城1-1", done: false, pass: true },
+            { time: "15:00", name: "🌳 大阪城西之丸庭園", note: "【順遊/周遊卡免費】天守閣旁的大片平坦草地，讓小孩奔跑放電、拍攝城堡全景", mapUrl: "https://maps.google.com/?q=大阪城西の丸庭園", address: "大阪城公園內", done: false, pass: true },
             { time: "15:30", name: "🚂 大阪城公園路面小火車", note: "從天守閣搭乘小火車回到公園外圍 (單程約¥400自費)，4歲小孩會坐得非常開心", mapUrl: "https://maps.google.com/?q=大阪城公園", address: "大阪城公園內乘車處", done: false, pass: false },
             { time: "16:30", name: "🚕 大阪城叫車 → 新世界老街", note: "車程約20分鐘 (預估車資1台約 ¥2500-¥3000)。直達通天閣下方。", mapUrl: "https://maps.google.com/?q=通天閣", address: "大阪市浪速区恵美須東1丁目18-6", done: false, pass: false },
             { time: "17:00", name: "🗼 新世界老街與通天閣", note: "【必去/周遊卡免費】造訪充滿浮誇霓虹招牌的新世界老街，並登上通天閣俯瞰夜景", mapUrl: "https://maps.google.com/?q=通天閣", address: "大阪市浪速区恵美須東1丁目18-6", done: false, pass: true },
@@ -235,10 +221,56 @@
           ],
         },
         {
-          id: 4, label: "6/28 日", date: "Day 4｜賦歸", theme: "離開前的大阪日常 × 悠閒早晨", emoji: "🛫",
+          id: 3, label: "6/27 六", date: "Day 3｜周遊卡 Day 2 🎫", theme: "港灣大觀覽車與天王寺動物園", emoji: "🎡",
+          rainBackup: "☔ 上午雨勢較大・降雨機率 80%（午後逐漸轉陰，雨勢趨緩）\n摩天輪、聖瑪麗亞號皆為室內／密閉空間，小雨仍可正常體驗，不受影響。\n\n若上午雨勢過大想完全避雨：可直接改去天保山旁的【海遊館】(世界最大室內水族館，需自費)，與摩天輪同一區、不必拉車。午後動物園與道頓堀觀光船多有遮蔽設施，一般小雨不影響開放。",
           spots: [
-            { time: "早上", name: "😴 睡到自然醒", note: "周遊卡已於凌晨2:59失效，功成身退。今日輕鬆過！", mapUrl: "", address: "", done: false, pass: false },
-            { time: "09:00", name: "🚕 飯店叫車出發 → 黑門市場", note: "若時間允許，搭短程計程車至黑門市場體驗大阪廚房吃早餐", mapUrl: "https://maps.google.com/?q=黑門市場", address: "大阪市中央区日本橋", done: false, pass: false },
+            { time: "出發前", name: "☔ 上午雨勢較大 (降雨機率80%)", note: "預報上午雨勢較明顯、午後逐漸轉陰。今日戶外活動較多，建議攜帶雨具備用；若上午持續下大雨，可參考下方雨備直接切換至【海遊館】室內水族館，與天保山同一區不用拉車", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:00", name: "🚕 飯店叫車 → 大阪港（天保山）", note: "車程約25分鐘 (預估車資1台約 ¥3500-¥4000)。上車前將地址指給司機看。", mapUrl: "https://maps.google.com/?q=大阪港", address: "大阪市港区海岸通1丁目1-10", done: false, pass: false },
+            { time: "09:30", name: "🎡 天保山大摩天輪", note: "【必去/周遊卡免費】搭乘巨大摩天輪俯瞰大阪灣，小孩會對寬闊視野感到興奮 (4歲需現場購票約 ¥500)（【雨備】摩天輪為密閉車廂，小雨仍可搭乘；若暴雨可改去隔壁室內的【海遊館】）", mapUrl: "https://maps.google.com/?q=天保山大摩天輪", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
+            { time: "10:30", name: "⛵ 帆船型觀光船 聖瑪麗亞號", note: "【順遊/周遊卡免費】搭乘仿古帆船航行大阪港45分鐘，1樓有互動船艙可探險 (4歲免費)（【雨備】1樓船艙室內，下雨仍可登船體驗）", mapUrl: "https://maps.google.com/?q=帆船型観光船サンタマリア", address: "大阪市港区海岸通1丁目1-10", done: false, pass: true },
+            { time: "11:30", name: "🍱 天保山市場街 浪速美食橫丁", note: "商場內的復古美食街，有許多免排隊且適合親子的餐廳", mapUrl: "https://maps.google.com/?q=天保山マーケットプレース", address: "大阪市港区海岸通1丁目1-10 2F", done: false, pass: false },
+            { time: "13:00", name: "🚕 大阪港叫車 → 天王寺動物園", note: "車程約20分鐘 (預估車資1台約 ¥3000-¥3500)。小孩剛好可以在車上舒服睡午覺補眠。", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: false },
+            { time: "13:30", name: "🐧 天王寺動物園放電", note: "【必去/周遊卡免費】超過百年歷史，看獅子與企鵝！園區大小適中，逛起來不會讓小孩過度疲累 (4歲以下免費)（【雨備】午後若雨勢仍大，可縮短停留時間，多利用有遮蔽的猛獸館、企鵝館室內展區）", mapUrl: "https://maps.google.com/?q=天王寺動物園", address: "大阪市天王寺区茶臼山町1-108", done: false, pass: true },
+            { time: "16:30", name: "🚕 動物園叫車 → 道頓堀", note: "車程約10分鐘 (預估車資1台約 ¥1500)。玩累了搭車直達，建議先到乘船處兌換晚間船票", mapUrl: "https://maps.google.com/?q=道頓堀", address: "大阪市中央区道頓堀", done: false, pass: false },
+            { time: "17:00", name: "🚤 道頓堀水上觀光船", note: "【必去/周遊卡免費】晚餐前後搭觀光船穿梭霓虹燈海 (4歲小孩由大人抱坐免費)（【雨備】船隻多有遮雨棚，小雨仍會出航；若颱風等級強風雨則暫停，屆時可直接改為道頓堀周邊室內逛街）", mapUrl: "https://maps.google.com/?q=太左衛門橋船着場", address: "太左衛門橋船著場 (驚安殿堂前)", done: false, pass: true },
+            { time: "18:00", name: "🥩 道頓堀晚餐", note: "享受燒肉吃到飽或大阪燒，結束海陸充實的一天", mapUrl: "https://maps.google.com/?q=道頓堀", address: "道頓堀周邊", done: false, pass: false },
+          ],
+          restaurants: [
+             {
+              meal: "午餐 推薦", emoji: "🧇", name: "天保山 浪速美食橫丁",
+              genre: "親子午餐/輕食", budget: "¥800–1,500", area: "天保山市場街",
+              hours: "11:00–20:00",
+              mapUrl: "https://maps.google.com/?q=34.6540,135.4320",
+              address: "大阪市港区海岸通1丁目1-10 2F",
+              recommend: "下船後直接走進商場的復古美食街，有自由軒咖哩、北極星蛋包飯等名店，選擇多且適合小孩，室內冷氣充足是最舒服的休息點。",
+              tips: ["有兒童椅與育嬰室", "找免排隊的店吃即可，把體力留給下午動物園"],
+            },
+            {
+              meal: "晚餐 首選 ⭐", emoji: "🥩", name: "但馬屋 デラックス DX 心斎橋店",
+              genre: "燒肉", budget: "¥4,000–6,000", area: "心齋橋",
+              hours: "11:00–23:00",
+              mapUrl: "https://maps.google.com/?q=34.6692819,135.5015241",
+              address: "大阪市中央区宗右衛門町",
+              recommend: "您的口袋清單！環境舒適的燒肉店，提供高品質的黑毛和牛。適合一家人好好吃頓大餐慰勞一天的辛勞。",
+              tips: ["建議提早預約", "單點制，可依個人食量控制預算"],
+            },
+            {
+              meal: "晚餐 備選", emoji: "🥞", name: "美津濃大阪燒（美津の）",
+              genre: "大阪燒", budget: "¥1,500–2,500", area: "道頓堀",
+              hours: "11:00–21:00 (週三休)",
+              mapUrl: "https://maps.google.com/?q=34.6690,135.5010",
+              address: "大阪市中央区道頓堀1丁目4-15",
+              recommend: "米其林必比登連年推薦！招牌「美津乃燒」有蝦、魷魚、章魚、豬肉等豐富配料，山藥燒口感清爽，全大阪最推薦的大阪燒。",
+              tips: ["每人低消一份餐點", "經常大排長龍，需預留時間"],
+            }
+          ],
+        },
+        {
+          id: 4, label: "6/28 日", date: "Day 4｜賦歸", theme: "離開前的大阪日常 × 悠閒早晨", emoji: "🛫",
+          rainBackup: "☔ 清晨雨後午後轉好・清晨機率 90%／日間降至 20%\n黑門市場為室內拱廊街，雨天無礙，可正常前往。\n\n若清晨雨勢仍大不想出門：可直接提早退房，前往機場旁全室內的【臨空城 Outlet】做最後採買，日間雨勢預估會逐漸趨緩。\n\n💧 行李記得留意是否還有未用完的雨具，搭機前可收進托運行李。",
+          spots: [
+            { time: "早上", name: "☔ 清晨雨後午後轉好 (晨間機率90%)", note: "周遊卡已於凌晨2:59失效，功成身退。預報清晨仍可能下雨，但日間逐漸轉好，今日輕鬆過！", mapUrl: "", address: "", done: false, pass: false },
+            { time: "09:00", name: "🚕 飯店叫車出發 → 黑門市場", note: "若時間允許，搭短程計程車至黑門市場體驗大阪廚房吃早餐（【雨備】市場為室內拱廊街，下雨無礙；若仍嫌麻煩，可直接跳過改睡晚一點，於退房後直奔機場旁的臨空城 Outlet）", mapUrl: "https://maps.google.com/?q=黑門市場", address: "大阪市中央区日本橋", done: false, pass: false },
             { time: "10:00", name: "🚕 黑門市場叫車 → 難波站", note: "轉乘南海電鐵特急（約34分鐘直達關西機場第一航廈）", mapUrl: "https://maps.google.com/?q=南海難波站", address: "南海難波車站", done: false, pass: false },
             { time: "11:00", name: "🛍️ 臨空城 Outlet (可選行程)", note: "【備案/購物】若提早到機場區域，可考慮將行李寄放後前往臨空城最後採買 (注意搭機時間)", mapUrl: "https://maps.google.com/?q=34.4107338,135.2996108", address: "臨空城 Rinku Premium Outlets", done: false, pass: false },
             { time: "13:30", name: "✈️ 搭機回台", note: "⚠️ 機場最後30分鐘最危險！買伴手禮容易爆預算。辦理免稅退稅記得預留排隊時間。", mapUrl: "https://maps.google.com/?q=關西國際機場", address: "關西國際機場 (KIX) 第一航廈", done: false, pass: false },
@@ -265,7 +297,7 @@
           ],
         },
       ],
-      notes: "🚕 【計程車移動指南 (好消息！)】\n1. 完美配置：日本一般計程車(含JPN Taxi)限乘4名乘客。貴團「3大1小」剛好可以同坐 1 台車，不用拆車，移動超方便且車資減半！\n2. 必備 APP：強烈建議在台灣先下載好「Uber」或日本當地的「GO Taxi」並綁好信用卡，可省去語言不通或付現找零的麻煩。\n3. 給司機看地址：行程表中皆附有日文詳細地址，上車直接指給司機看即可。\n4. 費用分攤：單趟 ¥1500-¥4000 的車資，因為只有一台車，四人分攤下來跟搭地鐵差不多，還能換取長輩與小孩的體力與情緒穩定，CP值極高！\n\n☔ 【雨天備案】\n若遇大雨戶外行程(如大阪城、動物園)不便，可替換為：\n- 備案一：【大阪生活今昔館】(周遊卡免費) - 室內體驗江戶時代大阪風情。\n- 備案二：加長【Kids Plaza 大阪兒童樂園】停留時間，旁邊就是日本最長天神橋筋商店街，有屋頂完全不怕雨。\n- 備案三：【海遊館】(需另外購票) - 天保山旁，世界最大級室內水族館。\n- 備案四(回程)：【臨空城 Outlet】 - 若最後一天下雨，可提早前往機場附近的 Outlet 室內逛街。",
+      notes: "",
       lastUpdated: new Date().toISOString(),
     };
 
@@ -367,24 +399,20 @@
       const [loaded, setLoaded]         = useState(false);
       const [weather, setWeather]       = useState(null);
 
+      // 行程當日 (6/25-6/28) 天氣預報，資料來源：日本氣象協會 tenki.jp / Toshin.com，預報發布於 2026/6/21
+      // 梅雨前線於 6/25-26 明顯增強，6/27-28 鋒面仍滯留本州附近，天氣持續不穩定
       const fetchWeather = () => {
-          const today = new Date();
-          setWeather([0,1,2].map(i => {
-            const d = new Date(today); d.setDate(d.getDate() + i);
-            return { 
-                date: d.toISOString().slice(0,10), 
-                icon: ["🌦️","☀️","🌤️"][i], 
-                label: ["陣雨","晴天","晴時多雲"][i], 
-                max: [26,29,28][i], 
-                min: [21,22,21][i], 
-                rain: [60,15,30][i] 
-            };
-          }));
+          setWeather([
+            { date: "2026-06-25", icon: "🌧️", label: "雨（機率高）", max: 26, min: 21, rain: 100 },
+            { date: "2026-06-26", icon: "🌧️", label: "雨，慎防大雨", max: 27, min: 21, rain: 85 },
+            { date: "2026-06-27", icon: "🌦️", label: "雨後轉陰", max: 28, min: 21, rain: 80 },
+            { date: "2026-06-28", icon: "⛅", label: "晨雨午後轉好", max: 29, min: 22, rain: 55 },
+          ]);
       };
 
       const loadTrip = () => {
         try {
-          const saved = localStorage.getItem("osaka-trip-v12-taxi");
+          const saved = localStorage.getItem("osaka-trip-v16-weather");
           setTrip(saved ? JSON.parse(saved) : DEFAULT_TRIP);
         } catch { setTrip(DEFAULT_TRIP); }
         setLoaded(true);
@@ -393,7 +421,7 @@
       const saveTrip = (data) => {
         const updated = { ...data, lastUpdated: new Date().toISOString() };
         try { 
-            localStorage.setItem("osaka-trip-v12-taxi", JSON.stringify(updated)); 
+            localStorage.setItem("osaka-trip-v16-weather", JSON.stringify(updated)); 
             setTrip(updated); 
         } catch (e) { console.error(e); }
       };
@@ -424,7 +452,7 @@
           <div style={{ background: C.greenBand, height: 8 }} />
 
           <div style={{ background: "rgba(250,247,242,0.96)", borderBottom: `1px solid ${C.border}`, backdropFilter: "blur(6px)", position: "sticky", top: 0, zIndex: 10 }}>
-            <div style={{ maxWidth: 680, margin: "0 auto", padding: "18px 16px 0" }}>
+            <div style={{ maxWidth: 680, margin: "0 auto", padding: "18px 12px 0" }}>
 
               <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 10 }}>
                 <div>
@@ -454,38 +482,50 @@
 
               <div style={{ marginTop: 10, marginBottom: 0 }}>
                 {weather ? (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 6 }}>
-                    {weather.map((w, i) => (
-                        <div key={i} style={{ background: "white", border: `1.5px solid ${C.border}`, borderRadius: 10, padding: "8px 6px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
-                          <div style={{ fontSize: 9.5, color: C.textLight, marginBottom: 3 }}>{fmtDay(w.date)}</div>
-                          <div style={{ fontSize: 22, lineHeight: 1.15 }}>{w.icon}</div>
-                          <div style={{ fontSize: 9, color: C.textMid, marginTop: 2 }}>{w.label}</div>
-                          <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginTop: 3 }}>
-                            {w.max}° <span style={{ fontSize: 11, color: C.textLight, fontWeight: 400 }}>{w.min}°</span>
+                  <>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 6 }}>
+                      {weather.map((w, i) => (
+                          <div key={i} style={{ background: "white", border: `1.5px solid ${w.rain >= 70 ? C.accent + "66" : C.border}`, borderRadius: 10, padding: "8px 6px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.03)" }}>
+                            <div style={{ fontSize: 9.5, color: C.textLight, marginBottom: 3 }}>{fmtDay(w.date)}</div>
+                            <div style={{ fontSize: 22, lineHeight: 1.15 }}>{w.icon}</div>
+                            <div style={{ fontSize: 9, color: C.textMid, marginTop: 2 }}>{w.label}</div>
+                            <div style={{ fontSize: 13, fontWeight: 700, color: C.text, marginTop: 3 }}>
+                              {w.max}° <span style={{ fontSize: 11, color: C.textLight, fontWeight: 400 }}>{w.min}°</span>
+                            </div>
+                            <div style={{ fontSize: 9.5, marginTop: 2, fontWeight: w.rain >= 70 ? 700 : 400, color: w.rain >= 70 ? C.accent : C.textLight }}>💧 {w.rain}%</div>
                           </div>
-                          <div style={{ fontSize: 9.5, marginTop: 2, color: w.rain >= 50 ? C.accent : C.textLight }}>💧 {w.rain}%</div>
-                        </div>
-                      ))}
-                  </div>
+                        ))}
+                    </div>
+                    <div style={{ fontSize: 9.5, color: C.textLight, textAlign: "center", marginTop: 6, lineHeight: 1.5 }}>
+                      ☔ 梅雨前線影響，4天皆有降雨機率，預報資料更新於 6/21，出發前請再次確認最新預報
+                    </div>
+                  </>
                 ) : (
                   <div style={{ fontSize: 11, color: C.textLight, textAlign: "center", padding: "8px 0" }}>天氣資料載入中…</div>
                 )}
               </div>
 
-              <div style={{ display: "flex", marginTop: 12 }}>
-                {[{ id: "itinerary", label: "📅 每日行程" }, { id: "restaurants", label: "🍽 餐廳推薦" }, { id: "flights", label: "✈️ 班機" }].map(t => (
+              <div style={{ display: "flex", marginTop: 12, overflowX: "auto", paddingBottom: 2 }}>
+                {[
+                  { id: "itinerary", label: "📅 每日行程" }, 
+                  { id: "restaurants", label: "🍽 餐廳推薦" }, 
+                  { id: "flights", label: "✈️ 班機" },
+                  { id: "accommodation", label: "🏨 住宿" }
+                ].map(t => (
                   <button key={t.id} onClick={() => setMainTab(t.id)} style={{
-                    flex: 1, padding: "10px 4px", border: "none", cursor: "pointer", fontSize: 12,
+                    flex: 1, padding: "10px 2px", border: "none", cursor: "pointer", fontSize: 12,
                     fontWeight: mainTab === t.id ? 700 : 400,
                     color: mainTab === t.id ? C.green : C.textMid,
                     background: "transparent",
                     borderBottom: mainTab === t.id ? `3px solid ${C.green}` : `3px solid ${C.border}`,
                     transition: "all 0.15s",
+                    minWidth: "75px",
+                    whiteSpace: "nowrap"
                   }}>{t.label}</button>
                 ))}
               </div>
 
-              {mainTab === "itinerary" && trip && trip.days && (
+              {(mainTab === "itinerary" || mainTab === "restaurants") && trip && trip.days && (
                 <div style={{ display: "flex", gap: 6, padding: "12px 0 12px", overflowX: "auto" }}>
                   {trip.days.map((day, i) => {
                     const dc = DAY_COLORS[i];
@@ -501,12 +541,12 @@
                   })}
                 </div>
               )}
-              {mainTab === "restaurants" && <div style={{ height: 12 }} />}
             </div>
           </div>
 
           <div style={{ maxWidth: 680, margin: "0 auto", padding: "18px 16px 0" }}>
 
+            {/* ITINERARY */}
             {mainTab === "itinerary" && todayData && (
               <>
                 <div style={{ background: `linear-gradient(135deg,${activeColor}18,${activeColor}08)`, border: `1.5px solid ${activeColor}44`, borderRadius: 14, padding: "14px 18px", marginBottom: 16, display: "flex", alignItems: "center", gap: 14 }}>
@@ -579,8 +619,8 @@
                 )}
 
                 <div style={{ marginTop: 18, padding: "14px 16px", background: C.greenLight, borderRadius: 12, border: `1px solid ${C.green}33` }}>
-                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 7 }}>小提醒 & ☔ 雨天/交通備案</div>
-                  <div style={{ fontSize: 13, color: C.greenDark, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{trip && trip.notes}</div>
+                  <div style={{ fontSize: 10, letterSpacing: 3, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 7 }}>{todayData.date} 小提醒 & 雨天備案</div>
+                  <div style={{ fontSize: 13, color: C.greenDark, lineHeight: 1.8, whiteSpace: "pre-wrap" }}>{todayData.rainBackup}</div>
                 </div>
               </>
             )}
@@ -588,21 +628,6 @@
             {/* RESTAURANTS */}
             {mainTab === "restaurants" && trip && trip.days && (
               <div>
-                <div style={{ display: "flex", gap: 6, marginBottom: 16, overflowX: "auto", paddingBottom: 2 }}>
-                  {trip.days.map((day, i) => {
-                    const dc = DAY_COLORS[i];
-                    const active = activeDay === i;
-                    return (
-                      <button key={day.id} onClick={() => setActiveDay(i)} style={{
-                        background: active ? dc : "white", border: `1.5px solid ${active ? dc : C.border}`,
-                        color: active ? "#fff" : C.textMid, padding: "6px 14px", borderRadius: 20,
-                        cursor: "pointer", fontSize: 12, fontWeight: active ? 700 : 400, whiteSpace: "nowrap",
-                        transition: "all 0.18s", boxShadow: active ? `0 2px 8px ${dc}44` : "none",
-                      }}>{day.emoji} {day.label}</button>
-                    );
-                  })}
-                </div>
-
                 {trip.days[activeDay] && (
                   <div style={{ marginBottom: 14, paddingLeft: 2 }}>
                     <span style={{ fontSize: 11, color: activeColor, fontWeight: 700, letterSpacing: 1 }}>
@@ -717,6 +742,69 @@
                   <div style={{ fontSize: 11, fontWeight: 700, color: C.green, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>出發前確認清單</div>
                   {FLIGHTS.reminders.map((r, i) => (
                     <div key={i} style={{ fontSize: 12.5, color: C.textMid, marginBottom: 7, lineHeight: 1.6 }}>{r}</div>
+                  ))}
+                </div>
+
+              </div>
+            )}
+
+            {/* ACCOMMODATION */}
+            {mainTab === "accommodation" && (
+              <div>
+                <div style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, padding: "16px", marginBottom: 16, boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+                  
+                  {/* Header */}
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontSize: 10, letterSpacing: 2, color: C.green, textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>合法私人旅館</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: C.text }}>{ACCOMMODATION.name}</div>
+                      <div style={{ fontSize: 13, color: C.textMid, marginTop: 4, fontWeight: 600 }}>{ACCOMMODATION.room} • {ACCOMMODATION.capacity}</div>
+                    </div>
+                    <div style={{ fontSize: 32 }}>🏠</div>
+                  </div>
+
+                  {/* Address & Map */}
+                  <div style={{ background: C.greenLight, padding: "10px 12px", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 14 }}>
+                    <div style={{ fontSize: 12, color: C.greenDark, lineHeight: 1.4, fontWeight: 600 }}>
+                      📍 {ACCOMMODATION.address}
+                    </div>
+                    <a href={ACCOMMODATION.mapUrl} target="_blank" rel="noopener noreferrer"
+                      style={{ flexShrink: 0, background: "#fff", border: `1px solid ${C.green}`, color: C.greenDark, borderRadius: 16, padding: "4px 10px", fontSize: 11, fontWeight: 700, textDecoration: "none" }}>
+                      地圖 ↗
+                    </a>
+                  </div>
+
+                  {/* Website link */}
+                  <div style={{ marginBottom: 16 }}>
+                     <a href={ACCOMMODATION.website} target="_blank" rel="noopener noreferrer"
+                      style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: "#fff", background: C.green, padding: "8px 16px", borderRadius: 20, textDecoration: "none", fontWeight: 700, boxShadow: `0 2px 8px ${C.green}55` }}>
+                      🌐 前往官方網站 / 住宿指南 ↗
+                     </a>
+                  </div>
+
+                  {/* Description */}
+                  <div style={{ fontSize: 13, color: C.textMid, lineHeight: 1.7, marginBottom: 18 }}>
+                    {ACCOMMODATION.description}
+                  </div>
+
+                  {/* Amenities */}
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: C.textLight, marginBottom: 10, textTransform: "uppercase", letterSpacing: 1 }}>全方位設施</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                      {ACCOMMODATION.amenities.map((item, i) => (
+                        <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: C.text, fontWeight: 600 }}>
+                          <span style={{ fontSize: 16 }}>{item.icon}</span> {item.label}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reminders */}
+                <div style={{ background: C.bgCard, border: `1.5px solid ${C.borderCard}`, borderRadius: 14, padding: "14px 16px", boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: 2, marginBottom: 10, textTransform: "uppercase" }}>⚠️ 入住重要提醒</div>
+                  {ACCOMMODATION.reminders.map((r, i) => (
+                    <div key={i} style={{ fontSize: 12.5, color: C.textMid, marginBottom: 6, lineHeight: 1.6, paddingLeft: 8, borderLeft: `2.5px solid ${C.accent}` }}>{r}</div>
                   ))}
                 </div>
 
